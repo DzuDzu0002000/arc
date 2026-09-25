@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.vercel
+.env
+.env.*
+!.env.example
+!.env.mock
+contracts/out/
+contracts/cache/
+contracts/lib/
+*.log
+.DS_Store
+Thumbs.db
+.claude/
