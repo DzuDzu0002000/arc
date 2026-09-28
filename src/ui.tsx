@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type AnchorHTMLAttributes, type ReactNode } from 'react'
-import type { BugStatus, Severity } from './api'
+import type { BugStatus, Role, Severity } from './api'
+import { getLang, locale, setLang, t, type Lang } from './i18n'
 
 // ---- Tiny router (pushState + popstate) ----
 export function navigate(to: string) {
@@ -43,10 +44,10 @@ export function useLoad<T>(load: () => Promise<T>, deps: unknown[]) {
 }
 
 export function Loading({ error, onRetry }: { error: string; onRetry?: () => void }) {
-  if (!error) return <p className="muted" role="status">Đang tải…</p>
+  if (!error) return <p className="muted" role="status">{t('Đang tải…')}</p>
   return (
     <div className="alert error" role="alert">
-      {error} {onRetry && <button type="button" className="btn" style={{ minHeight: 32, marginLeft: 8 }} onClick={onRetry}>Thử lại</button>}
+      {error} {onRetry && <button type="button" className="btn" style={{ minHeight: 32, marginLeft: 8 }} onClick={onRetry}>{t('Thử lại')}</button>}
     </div>
   )
 }
@@ -71,37 +72,41 @@ const BUG_STATUS: Record<BugStatus, [string, string]> = {
 
 export function BugStatusChip({ status, amount }: { status: BugStatus; amount?: string | null }) {
   const [label, tone] = BUG_STATUS[status]
-  return <span className={`pill ${tone}`}>{status === 'paid' && amount ? `Đã trả +${usdc(amount)}` : label}</span>
+  return <span className={`pill ${tone}`}>{status === 'paid' && amount ? t('Đã trả +{amount}', { amount: usdc(amount) }) : t(label)}</span>
 }
 
-export const REJECT_LABEL: Record<string, string> = {
+const REJECT_TEXT: Record<string, string> = {
   duplicate: 'Trùng bug khác', out_of_scope: 'Ngoài phạm vi', cannot_reproduce: 'Không tái hiện được',
   not_a_bug: 'Không phải lỗi', low_quality: 'Báo cáo thiếu thông tin',
 }
+export const REJECT_REASONS = Object.keys(REJECT_TEXT)
+export const rejectLabel = (reason: string | null | undefined) => (reason && REJECT_TEXT[reason] ? t(REJECT_TEXT[reason]) : reason ?? '')
 
 export const PLATFORM_LABEL: Record<string, string> = { web: 'Web', ios: 'iOS', android: 'Android', desktop: 'Desktop', api: 'API' }
 
 export function usdc(amount: string | null | undefined) {
   if (amount === null || amount === undefined) return '—'
   const value = Number(amount)
-  return Number.isFinite(value) ? value.toLocaleString('vi-VN', { maximumFractionDigits: 6 }) : amount
+  return Number.isFinite(value) ? value.toLocaleString(locale(), { maximumFractionDigits: 6 }) : amount
 }
 
 export function timeLeft(iso: string | null) {
   if (!iso) return ''
   const ms = new Date(iso).getTime() - Date.now()
-  if (ms <= 0) return 'đã hết hạn'
+  if (ms <= 0) return t('đã hết hạn')
   const hours = Math.floor(ms / 3_600_000)
-  if (hours >= 48) return `còn ${Math.floor(hours / 24)} ngày`
-  if (hours >= 1) return `còn ${hours} giờ`
-  return `còn ${Math.max(1, Math.floor(ms / 60_000))} phút`
+  if (hours >= 48) return t('còn {n} ngày', { n: Math.floor(hours / 24) })
+  if (hours >= 1) return t('còn {n} giờ', { n: hours })
+  return t('còn {n} phút', { n: Math.max(1, Math.floor(ms / 60_000)) })
 }
 
 export function dateTime(iso: string) {
-  return new Date(iso).toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' })
+  return new Date(iso).toLocaleString(locale(), { dateStyle: 'medium', timeStyle: 'short' })
 }
 
 const explorer = (import.meta.env.VITE_ARC_EXPLORER_URL as string | undefined) || 'https://explorer.testnet.arc.io'
+/** Circle's testnet faucet: pick Arc Testnet to get USDC (Arc's gas token) or EURC. */
+export const FAUCET_URL = 'https://faucet.circle.com/'
 export const txUrl = (hash: string) => `${explorer}/tx/${hash}`
 export const addressUrl = (address: string) => `${explorer}/address/${address}`
 export const shortAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`
@@ -116,6 +121,10 @@ export const Icons = {
   projects: icon(<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />),
   wallet: icon(<><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18" /><path d="M16 14.5h2" /></>),
   back: icon(<path d="M15 18l-6-6 6-6" />),
+  home: icon(<><path d="M4 11l8-7 8 7" /><path d="M6 9.5V20h12V9.5" /><path d="M10 20v-5h4v5" /></>),
+  scale: icon(<><path d="M12 4v16" /><path d="M7 20h10" /><path d="M5 8h14" /><path d="M5 8l-2.5 6a2.5 2.5 0 0 0 5 0z" /><path d="M19 8l-2.5 6a2.5 2.5 0 0 0 5 0z" /></>),
+  faucet: icon(<path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z" />),
+  admin: icon(<><path d="M12 3l8 4v5c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V7z" /><path d="M9 12l2 2 4-4" /></>),
   lock: icon(<><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>),
 }
 
@@ -127,25 +136,76 @@ export function BrandMark() {
   )
 }
 
-export function BackLink({ to, label = 'Quay lại' }: { to: string; label?: string }) {
-  return <Link to={to} aria-label={label} className="row" style={{ width: 44, height: 44, marginLeft: -10, justifyContent: 'center', color: 'var(--ink)' }}>{Icons.back}</Link>
+export function BackLink({ to, label }: { to: string; label?: string }) {
+  return <Link to={to} aria-label={label ?? t('Quay lại')} className="row" style={{ width: 44, height: 44, marginLeft: -10, justifyContent: 'center', color: 'var(--ink)' }}>{Icons.back}</Link>
 }
 
-export function BottomNav({ path }: { path: string }) {
-  const items: Array<[string, string, ReactNode]> = [
+/** Which nav item a path belongs to, per role (a bug page sits under the review queue or "my bugs"). */
+function section(path: string, role: Role) {
+  if (path.startsWith('/app/wallet')) return '/app/wallet'
+  if (path.startsWith('/app/admin')) return '/app/admin'
+  if (role === 'project') {
+    if (path.startsWith('/app/review') || path.startsWith('/app/bugs')) return '/app/review'
+    if (path.startsWith('/app/projects') || path.startsWith('/app/c/')) return '/app/projects'
+    return '/app'
+  }
+  if (path.startsWith('/app/work') || path.startsWith('/app/bugs')) return '/app/work'
+  if (path.startsWith('/app/disputes')) return '/app/disputes'
+  return '/app'
+}
+
+const NAV: Record<Role, Array<[string, string, ReactNode]>> = {
+  project: [
+    ['/app', 'Tổng quan', Icons.home],
+    ['/app/projects', 'Chiến dịch', Icons.projects],
+    ['/app/review', 'Bug cần xét', Icons.work],
+    ['/app/wallet', 'Ví & nạp tiền', Icons.wallet],
+  ],
+  tester: [
     ['/app', 'Khám phá', Icons.explore],
-    ['/app/work', 'Công việc', Icons.work],
-    ['/app/projects', 'Dự án', Icons.projects],
+    ['/app/work', 'Bug của tôi', Icons.work],
+    ['/app/disputes', 'Tranh chấp', Icons.scale],
     ['/app/wallet', 'Ví', Icons.wallet],
-  ]
-  const current = items.filter(([to]) => path === to || path.startsWith(`${to}/`)).sort((a, b) => b[0].length - a[0].length)[0]?.[0]
+  ],
+}
+
+/** Vertical sidebar on wide screens, bottom tab bar on phones (switched by CSS). Items depend on the account's role. */
+export function AppNav({ path, role, isAdmin }: { path: string; role: Role; isAdmin: boolean }) {
+  const items = [...NAV[role]]
+  if (isAdmin) items.push(['/app/admin', 'Admin', Icons.admin])
+  const current = section(path, role)
   return (
-    <nav className="nav" aria-label="Điều hướng chính">
+    <nav className="nav" aria-label={t('Điều hướng chính')}>
+      <Link to="/app" className="brand nav-brand"><BrandMark />ArcHunt</Link>
+      <span className="nav-role">{role === 'project' ? t('Không gian dự án') : t('Không gian tester')}</span>
       <div className="nav-inner">
         {items.map(([to, label, glyph]) => (
-          <Link key={to} to={to} aria-current={current === to ? 'page' : undefined}>{glyph}{label}</Link>
+          <Link key={to} to={to} className={to === '/app/admin' ? 'nav-extra' : undefined} aria-current={current === to ? 'page' : undefined}>
+            {glyph}<span>{t(label)}</span>
+          </Link>
         ))}
+        <a href={FAUCET_URL} target="_blank" rel="noreferrer" title={t('Nhận USDC testnet trên Arc (mở tab mới)')}>
+          {Icons.faucet}<span>Faucet</span>
+        </a>
       </div>
+      <LangSwitch className="nav-lang" />
     </nav>
+  )
+}
+
+/** VI | EN toggle. App listens for the event and re-renders everything in the new language. */
+export function LangSwitch({ className }: { className?: string }) {
+  const lang = getLang()
+  const pick = (next: Lang) => {
+    if (next === lang) return
+    setLang(next)
+    window.dispatchEvent(new Event('archunt:lang'))
+  }
+  return (
+    <div className={`lang-switch ${className ?? ''}`} role="group" aria-label="Language / Ngôn ngữ">
+      {(['vi', 'en'] as const).map((l) => (
+        <button key={l} type="button" aria-pressed={lang === l} onClick={() => pick(l)}>{l.toUpperCase()}</button>
+      ))}
+    </div>
   )
 }

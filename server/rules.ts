@@ -261,3 +261,46 @@ export function withdrawError(args: { status: CampaignStatus; endsAt: string; op
   if (args.openBugs > 0) return 'Some bugs are still waiting for a decision, payment or dispute.'
   return null
 }
+
+export type RatingInput = { stars: number; comment: string | null }
+
+/** A project rates the tester once per paid bug in its own campaign. */
+export function validateRating(input: unknown, bug: { status: BugStatus; alreadyRated: boolean }): Result<RatingInput> {
+  if (bug.status !== 'paid') return fail('You can rate the tester once the bug is paid.')
+  if (bug.alreadyRated) return fail('You already rated this bug.')
+  const body = input && typeof input === 'object' ? input as Record<string, unknown> : {}
+  const stars = Number(body.stars)
+  if (!Number.isInteger(stars) || stars < 1 || stars > 5) return fail('Choose 1 to 5 stars.')
+  const comment = typeof body.comment === 'string' ? body.comment.trim() : ''
+  if (comment.length > 500) return fail('Keep the comment under 500 characters.')
+  return { ok: true, value: { stars, comment: comment || null } }
+}
+
+export type TesterStatsRow = {
+  campaigns_tested: number | string; bugs_reported: number | string; bugs_accepted: number | string
+  critical_or_high: number | string; earned: number | string; rating_avg: number | string | null; rating_count: number | string
+}
+
+/** Postgres counts come back as strings; normalize and add the acceptance rate projects look at. */
+export function testerProfile(row: TesterStatsRow | null) {
+  const n = (value: number | string | null | undefined) => Number(value ?? 0)
+  const reported = n(row?.bugs_reported)
+  const accepted = n(row?.bugs_accepted)
+  return {
+    campaignsTested: n(row?.campaigns_tested),
+    bugsReported: reported,
+    bugsAccepted: accepted,
+    criticalOrHigh: n(row?.critical_or_high),
+    acceptanceRate: reported ? Math.round((accepted / reported) * 100) : null,
+    earned: String(n(row?.earned)),
+    ratingAvg: row?.rating_avg == null ? null : Math.round(n(row.rating_avg) * 10) / 10,
+    ratingCount: n(row?.rating_count),
+  }
+}
+
+/** An admin cannot judge a dispute they are part of: as the campaign owner or as the tester who reported the bug. */
+export function adminConflictError(adminAccountId: string, parties: { campaignOwnerId: string; testerId: string }): string | null {
+  if (adminAccountId === parties.campaignOwnerId) return 'You own this campaign, so another admin must resolve this dispute.'
+  if (adminAccountId === parties.testerId) return 'You reported this bug, so another admin must resolve this dispute.'
+  return null
+}

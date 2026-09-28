@@ -1,19 +1,29 @@
 import { db, must } from '../server/db.js'
 import { acceptBug, loadBug, loadCampaign, payWithArbiter, transitionBug } from '../server/flows.js'
-import { action, badRequest, body, conflict, route, uuidParam } from '../server/http.js'
-import { SEVERITIES, type Severity } from '../server/rules.js'
+import { action, badRequest, body, conflict, forbidden, route, uuidParam } from '../server/http.js'
+import { adminConflictError, SEVERITIES, type Severity } from '../server/rules.js'
 import { requireAdmin } from '../server/session.js'
 
 type Dispute = { id: string; bug_id: string; status: string }
+type DisputeRow = { bugs: { tester_account_id: string; campaigns: { owner_account_id: string } | null } | null } & Record<string, unknown>
 
 export default route(['GET', 'POST'], async (req) => {
   const session = await requireAdmin(req)
 
   if (req.method === 'GET') {
-    const disputes = must(await db().from('disputes')
-      .select('id, reason, status, created_at, bugs(id, title, severity_claimed, reject_reason, reject_note, campaigns(id, title, product_name))')
-      .eq('status', 'open').order('created_at'))
-    return { disputes }
+    const resolved = req.query.status === 'resolved'
+    const query = db().from('disputes')
+      .select('id, reason, status, resolution_note, created_at, resolved_at, bugs(id, title, severity_claimed, severity_final, payout_amount, reject_reason, reject_note, tester_account_id, accounts(display_name), campaigns(id, title, product_name, owner_account_id))')
+    const disputes = must(await (resolved
+      ? query.in('status', ['upheld', 'dismissed']).order('resolved_at', { ascending: false }).limit(100)
+      : query.eq('status', 'open').order('created_at')))
+    // Flag disputes this admin is part of; the UI hides the decision buttons and the POST below refuses them.
+    return {
+      disputes: (disputes as unknown as DisputeRow[]).map((d) => ({
+        ...d,
+        conflict: d.bugs ? adminConflictError(session.account.id, { campaignOwnerId: d.bugs.campaigns?.owner_account_id ?? '', testerId: d.bugs.tester_account_id }) : null,
+      })),
+    }
   }
 
   const input = body(req)
@@ -26,6 +36,8 @@ export default route(['GET', 'POST'], async (req) => {
 
   const bug = await loadBug(dispute.bug_id)
   const campaign = await loadCampaign(bug.campaign_id)
+  const conflictError = adminConflictError(session.account.id, { campaignOwnerId: campaign.owner_account_id, testerId: bug.tester_account_id })
+  if (conflictError) throw forbidden(conflictError)
   if (upheld) {
     const severity = (SEVERITIES.includes(input.severity as Severity) ? input.severity : bug.severity_claimed) as Severity
     const accepted = await acceptBug(bug, campaign, severity, 'admin')

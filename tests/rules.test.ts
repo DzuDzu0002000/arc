@@ -1,8 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  applyError, approveError, disputeError, maxPayoutUnits, minPayoutUnits, nextBugStatus, rejectError,
-  remainingBudget, submitBugError, validateBugInput, validateCampaignInput, withdrawError,
+  adminConflictError, applyError, approveError, disputeError, maxPayoutUnits, minPayoutUnits, nextBugStatus, rejectError,
+  remainingBudget, submitBugError, testerProfile, validateBugInput, validateCampaignInput, validateRating, withdrawError,
 } from '../server/rules.ts'
 
 const now = new Date('2026-09-25T00:00:00Z')
@@ -107,4 +107,28 @@ test('owners withdraw leftovers only after the grace period with nothing pending
   assert.match(withdrawError({ status: 'closed', endsAt: inDays(-3), openBugs: 0, now }) || '', /14 days/)
   assert.match(withdrawError({ status: 'closed', endsAt: ended, openBugs: 1, now }) || '', /still waiting/)
   assert.match(withdrawError({ status: 'settled', endsAt: ended, openBugs: 0, now }) || '', /Nothing to withdraw/)
+})
+
+test('projects rate a tester once, only after the bug is paid', () => {
+  assert.ok(validateRating({ stars: 5, comment: ' Rõ ràng ' }, { status: 'paid', alreadyRated: false }).ok)
+  assert.match((validateRating({ stars: 5 }, { status: 'accepted', alreadyRated: false }) as { error: string }).error, /once the bug is paid/)
+  assert.match((validateRating({ stars: 4 }, { status: 'paid', alreadyRated: true }) as { error: string }).error, /already rated/)
+  for (const stars of [0, 6, 2.5, 'x']) assert.equal(validateRating({ stars }, { status: 'paid', alreadyRated: false }).ok, false)
+  assert.equal(validateRating({ stars: 3, comment: 'x'.repeat(501) }, { status: 'paid', alreadyRated: false }).ok, false)
+  const ok = validateRating({ stars: 4, comment: '   ' }, { status: 'paid', alreadyRated: false })
+  assert.ok(ok.ok && ok.value.comment === null)
+})
+
+test('tester profile turns database counts into what projects compare', () => {
+  const profile = testerProfile({ campaigns_tested: '3', bugs_reported: '20', bugs_accepted: '15', critical_or_high: '4', earned: '310.000000', rating_avg: '4.67', rating_count: '6' })
+  assert.deepEqual(profile, { campaignsTested: 3, bugsReported: 20, bugsAccepted: 15, criticalOrHigh: 4, acceptanceRate: 75, earned: '310', ratingAvg: 4.7, ratingCount: 6 })
+  assert.equal(testerProfile(null).acceptanceRate, null)
+  assert.equal(testerProfile(null).ratingAvg, null)
+})
+
+test('admins cannot resolve disputes they are part of', () => {
+  const parties = { campaignOwnerId: 'owner', testerId: 'tester' }
+  assert.match(adminConflictError('owner', parties) || '', /own this campaign/)
+  assert.match(adminConflictError('tester', parties) || '', /reported this bug/)
+  assert.equal(adminConflictError('neutral-admin', parties), null)
 })

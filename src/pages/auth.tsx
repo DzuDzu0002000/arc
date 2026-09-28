@@ -2,24 +2,34 @@ import { useState, type FormEvent } from 'react'
 import { post } from '../api'
 import { useSession } from '../App'
 import { confirmChallenge, loginWithEmail } from '../circle'
-import { BrandMark, Link, navigate } from '../ui'
+import { t } from '../i18n'
+import { BrandMark, LangSwitch, Link, navigate } from '../ui'
+
+function Header() {
+  return (
+    <div className="row between">
+      <Link to="/" className="brand"><BrandMark />ArcHunt</Link>
+      <LangSwitch />
+    </div>
+  )
+}
 
 export function Landing() {
   return (
     <main className="hero">
-      <Link to="/" className="brand"><BrandMark />Bugline</Link>
-      <h1 style={{ marginTop: 40 }}>Test sản phẩm AI.<br />Nhận USDC cho mỗi bug được duyệt.</h1>
+      <Header />
+      <h1 style={{ marginTop: 40 }}>{t('Test sản phẩm AI.')}<br />{t('Nhận USDC cho mỗi bug được duyệt.')}</h1>
       <p className="muted" style={{ fontSize: 17, margin: 0 }}>
-        Dự án AI khóa sẵn tiền thưởng trong escrow trên Arc. Bạn tìm bug, dự án duyệt, tiền về ví bạn ngay.
+        {t('Dự án AI khóa sẵn tiền thưởng trong escrow trên Arc. Bạn tìm bug, dự án duyệt, tiền về ví bạn ngay.')}
       </p>
       <div className="row wrap">
-        <Link to="/auth" className="btn primary">Bắt đầu</Link>
-        <Link to="/auth?next=/app/projects/new" className="btn">Đăng chiến dịch test</Link>
+        <Link to="/auth" className="btn primary">{t('Bắt đầu')}</Link>
+        <Link to="/auth?next=/app/projects/new" className="btn">{t('Đăng chiến dịch test')}</Link>
       </div>
       <ul className="stack muted" style={{ marginTop: 'auto', paddingLeft: 18 }}>
-        <li>Đăng nhập bằng email, ví Circle được tạo tự động.</li>
-        <li>Nền tảng không thu phí. Tester nhận đủ 100%.</li>
-        <li>Dự án không phản hồi đúng hạn thì bug tự được chấp nhận.</li>
+        <li>{t('Đăng nhập bằng email qua Circle Wallet, ví được tạo tự động.')}</li>
+        <li>{t('Nền tảng không thu phí. Tester nhận đủ 100%.')}</li>
+        <li>{t('Dự án không phản hồi đúng hạn thì bug tự được chấp nhận.')}</li>
       </ul>
     </main>
   )
@@ -48,7 +58,7 @@ export function SignIn() {
         await new Promise((r) => setTimeout(r, 2000))
         result = await post('/api/auth/session', payload)
       }
-      if (!result.authenticated) throw new Error('Ví đang được tạo. Thử đăng nhập lại sau ít phút.')
+      if (!result.authenticated) throw new Error(t('Ví đang được tạo. Thử đăng nhập lại sau ít phút.'))
     }
   }
 
@@ -69,22 +79,22 @@ export function SignIn() {
   }
 
   const status: Record<Step, string> = {
-    email: '', otp: 'Kiểm tra email và nhập mã trong cửa sổ Circle…',
-    wallet: 'Tạo mã PIN để bảo vệ ví của bạn…', session: 'Đang chuẩn bị tài khoản…',
+    email: '', otp: t('Kiểm tra email và nhập mã trong cửa sổ Circle…'),
+    wallet: t('Tạo mã PIN để bảo vệ ví của bạn…'), session: t('Đang chuẩn bị tài khoản…'),
   }
 
   return (
     <main className="hero">
-      <Link to="/" className="brand"><BrandMark />Bugline</Link>
-      <h1 style={{ marginTop: 40 }}>Đăng nhập</h1>
-      <p className="muted" style={{ margin: 0 }}>Chúng tôi gửi mã một lần tới email của bạn. Không cần mật khẩu hay seed phrase.</p>
+      <Header />
+      <h1 style={{ marginTop: 40 }}>{t('Đăng nhập')}</h1>
+      <p className="muted" style={{ margin: 0 }}>{t('Đăng nhập bằng Circle Wallet: nhận mã một lần qua email, không cần mật khẩu hay seed phrase. Lần đầu, Circle tạo cho bạn một ví trên Arc.')}</p>
       <form className="stack" onSubmit={submit}>
         <label className="field">
           <span>Email</span>
           <input className="input" type="email" required autoComplete="email" value={email} disabled={busy}
-            onChange={(e) => setEmail(e.target.value)} placeholder="ban@email.com" />
+            onChange={(e) => setEmail(e.target.value)} placeholder={t('ban@email.com')} />
         </label>
-        <button className="btn primary block" type="submit" disabled={busy}>{busy ? 'Đang xử lý…' : 'Nhận mã OTP'}</button>
+        <button className="btn primary block" type="submit" disabled={busy}>{busy ? t('Đang xử lý…') : t('Tiếp tục với Circle Wallet')}</button>
       </form>
       {status[step] && <p className="muted" role="status">{status[step]}</p>}
       {error && <div className="alert error" role="alert">{error}</div>}

@@ -1,9 +1,9 @@
 import crypto from 'node:crypto'
-import { db, must, type AccountRow, type WalletRow } from './db.js'
+import { db, must, type AccountRow, type Role, type WalletRow } from './db.js'
 import { env } from './env.js'
 import { forbidden, unauthorized, type VercelRequest, type VercelResponse } from './http.js'
 
-const COOKIE = 'bugline_session'
+const COOKIE = 'archunt_session'
 const TTL_SECONDS = 7 * 24 * 60 * 60
 
 function sign(value: string) {
@@ -70,7 +70,7 @@ export async function getSession(req: VercelRequest): Promise<Session | null> {
   const sid = verifiedSid(req)
   if (!sid) return null
   const row = must(await db().from('sessions')
-    .select('sid, circle_user_token, expires_at, revoked_at, accounts(id, circle_user_id, email, display_name)')
+    .select('sid, circle_user_token, expires_at, revoked_at, accounts(id, circle_user_id, email, display_name, role)')
     .eq('sid', sid).maybeSingle<SessionJoin>())
   if (!row || row.revoked_at || new Date(row.expires_at) <= new Date() || !row.accounts) return null
   const wallet = must(await db().from('wallets').select('account_id, circle_wallet_id, address')
@@ -86,6 +86,15 @@ export async function requireSession(req: VercelRequest): Promise<Session & { wa
   if (!session) throw unauthorized()
   if (!session.wallet) throw unauthorized('Finish creating your wallet first.')
   return session as Session & { wallet: WalletRow }
+}
+
+const ROLE_LABEL: Record<Role, string> = { project: 'project', tester: 'tester' }
+
+/** The account must have picked this side (projects fund and review; testers apply, report and dispute). */
+export async function requireRole(req: VercelRequest, role: Role) {
+  const session = await requireSession(req)
+  if (session.account.role !== role) throw forbidden(`Only ${ROLE_LABEL[role]} accounts can do this.`)
+  return session
 }
 
 export async function requireAdmin(req: VercelRequest) {

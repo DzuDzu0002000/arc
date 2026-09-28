@@ -32,7 +32,7 @@ function reauthIfExpired(status: number) {
 
 function circleError(result: { status: number; payload: unknown }, fallback: string): never {
   reauthIfExpired(result.status)
-  console.error('BUGLINE_CIRCLE_ERROR', result.status, isRecord(result.payload) ? result.payload.code : undefined)
+  console.error('ARCHUNT_CIRCLE_ERROR', result.status, isRecord(result.payload) ? result.payload.code : undefined)
   throw new HttpError(502, fallback)
 }
 

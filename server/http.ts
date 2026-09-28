@@ -35,10 +35,10 @@ export function route(methods: string[], handler: Handler) {
     } catch (error) {
       if (error instanceof HttpError) return res.status(error.status).json({ error: error.message, code: error.code })
       if (error instanceof ConfigError) {
-        console.error('BUGLINE_CONFIG', error.message)
+        console.error('ARCHUNT_CONFIG', error.message)
         return res.status(500).json({ error: 'The server is not configured.' })
       }
-      console.error('BUGLINE_UNEXPECTED', error)
+      console.error('ARCHUNT_UNEXPECTED', error)
       return res.status(502).json({ error: 'Something went wrong. Please try again.' })
     }
   }

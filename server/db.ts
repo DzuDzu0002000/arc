@@ -16,7 +16,8 @@ export function must<T>(result: { data: T; error: PostgrestError | null }): T {
   return result.data
 }
 
-export type AccountRow = { id: string; circle_user_id: string; email: string | null; display_name: string }
+export type Role = 'project' | 'tester'
+export type AccountRow = { id: string; circle_user_id: string; email: string | null; display_name: string; role: Role | null }
 export type WalletRow = { account_id: string; circle_wallet_id: string; address: string }
 export type CampaignRow = {
   id: string; owner_account_id: string; job_type: string; title: string; product_name: string; description: string

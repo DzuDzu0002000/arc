@@ -1,4 +1,4 @@
-// Runs the real BuglineEscrow bytecode in an in-process EVM (no Foundry or RPC needed).
+// Runs the real ArcHuntEscrow bytecode in an in-process EVM (no Foundry or RPC needed).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -27,16 +27,16 @@ contract MockUsdc {
 }`
 
 function compile() {
-  const escrowSource = readFileSync(new URL('../contracts/src/BuglineEscrow.sol', import.meta.url), 'utf8')
+  const escrowSource = readFileSync(new URL('../contracts/src/ArcHuntEscrow.sol', import.meta.url), 'utf8')
   const output = JSON.parse(solc.compile(JSON.stringify({
     language: 'Solidity',
-    sources: { 'BuglineEscrow.sol': { content: escrowSource }, 'MockUsdc.sol': { content: `// SPDX-License-Identifier: MIT\n${MOCK_USDC}` } },
+    sources: { 'ArcHuntEscrow.sol': { content: escrowSource }, 'MockUsdc.sol': { content: `// SPDX-License-Identifier: MIT\n${MOCK_USDC}` } },
     settings: { evmVersion: 'cancun', optimizer: { enabled: true, runs: 200 }, outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object'] } } },
   })))
   const errors = (output.errors || []).filter((e: { severity: string }) => e.severity === 'error')
   assert.equal(errors.length, 0, JSON.stringify(errors))
   const pick = (file: string, name: string) => ({ abi: output.contracts[file][name].abi as Abi, bytecode: `0x${output.contracts[file][name].evm.bytecode.object}` as Hex })
-  return { escrow: pick('BuglineEscrow.sol', 'BuglineEscrow'), usdc: pick('MockUsdc.sol', 'MockUsdc') }
+  return { escrow: pick('ArcHuntEscrow.sol', 'ArcHuntEscrow'), usdc: pick('MockUsdc.sol', 'MockUsdc') }
 }
 
 const usdcAbi = parseAbi([

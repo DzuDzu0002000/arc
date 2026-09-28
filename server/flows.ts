@@ -7,7 +7,7 @@ import { env } from './env.js'
 import { receiptPaysBug, uuidToBytes32 } from './escrow.js'
 import { conflict, notFound } from './http.js'
 import { dbAmountToUnits, formatUsdc } from './money.js'
-import { nextBugStatus, remainingBudget, type BugAction, type Severity } from './rules.js'
+import { nextBugStatus, remainingBudget, testerProfile, type BugAction, type Severity, type TesterStatsRow } from './rules.js'
 
 export async function loadCampaign(id: string): Promise<CampaignRow> {
   const campaign = must(await db().from('campaigns').select('*').eq('id', id).maybeSingle<CampaignRow>())
@@ -103,4 +103,14 @@ export async function payWithArbiter(bug: BugRow, campaign: CampaignRow) {
     throw new Error(`Arbiter payout for bug ${bug.id} did not emit BugPaid`)
   }
   return markPaid(bug, hash)
+}
+
+/** Track records for a set of testers, keyed by account id (missing testers get an empty profile). */
+export async function testerProfiles(ids: string[]) {
+  const unique = [...new Set(ids)]
+  const rows = unique.length
+    ? must(await db().from('tester_stats').select('*').in('tester_account_id', unique)) as (TesterStatsRow & { tester_account_id: string })[]
+    : []
+  const byId = new Map(rows.map((row) => [row.tester_account_id, row]))
+  return new Map(unique.map((id) => [id, testerProfile(byId.get(id) ?? null)]))
 }

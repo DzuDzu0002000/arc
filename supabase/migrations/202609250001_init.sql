@@ -1,4 +1,4 @@
--- Bugline MVP schema. Every table is reached only through the server with the service role:
+-- ArcHunt MVP schema. Every table is reached only through the server with the service role:
 -- RLS is enabled with no policies, so the anon/public key can read or write nothing.
 
 create extension if not exists pgcrypto;

@@ -1,9 +1,10 @@
 // Thin wrapper around the Circle W3S web SDK: email OTP login and PIN-confirmed challenges.
 import type { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
 import { ApiError, post } from './api'
+import { t } from './i18n'
 
 const appId = import.meta.env.VITE_CIRCLE_APP_ID as string | undefined
-const STORAGE_KEY = 'bugline.circle'
+const STORAGE_KEY = 'archunt.circle'
 // Demo mode (`npm run dev:mock`): skip the Circle SDK and pretend every PIN prompt succeeds.
 const demo = import.meta.env.DEV && import.meta.env.VITE_MOCK === '1'
 
@@ -17,14 +18,14 @@ function onLoginComplete(error: unknown, result: unknown) {
   if (!waiter) return
   const r = result as Partial<CircleLogin> | undefined
   if (error || !r?.userToken || !r.encryptionKey) {
-    waiter.reject(new Error((error as { message?: string } | null)?.message || 'Mã OTP không hợp lệ hoặc đã hết hạn.'))
+    waiter.reject(new Error((error as { message?: string } | null)?.message || t('Mã OTP không hợp lệ hoặc đã hết hạn.')))
     return
   }
   waiter.resolve({ userToken: r.userToken, encryptionKey: r.encryptionKey, refreshToken: r.refreshToken || '' })
 }
 
 async function newSdk(): Promise<W3SSdk> {
-  if (!appId) throw new Error('Thiếu VITE_CIRCLE_APP_ID.')
+  if (!appId) throw new Error(t('Thiếu VITE_CIRCLE_APP_ID.'))
   const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
   // The SDK is a singleton; reset it so each login gets a fresh iframe and callback.
   document.getElementById('sdkIframe')?.remove()
@@ -69,13 +70,13 @@ export class ReauthRequired extends Error {}
 export async function confirmChallenge(challengeId: string): Promise<void> {
   if (demo) return new Promise((resolve) => setTimeout(resolve, 600))
   const auth = storedLogin()
-  if (!auth) throw new ReauthRequired('Phiên ký đã hết hạn. Đăng nhập lại để xác nhận.')
+  if (!auth) throw new ReauthRequired(t('Phiên ký đã hết hạn. Đăng nhập lại để xác nhận.'))
   const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
   const sdk = new W3SSdk({ appSettings: { appId: appId as string } })
   sdk.setAuthentication(auth)
   await new Promise<void>((resolve, reject) => {
     sdk.execute(challengeId, (error) => {
-      if (error) reject(new Error((error as { message?: string }).message || 'Giao dịch đã bị huỷ.'))
+      if (error) reject(new Error((error as { message?: string }).message || t('Giao dịch đã bị huỷ.')))
       else resolve()
     })
   })
@@ -99,9 +100,9 @@ export async function signAndConfirm<T extends { pending?: boolean; failed?: boo
   await confirmChallenge(challengeId)
   for (let attempt = 0; attempt < 30; attempt++) {
     const result = await confirm()
-    if (result.failed) throw new Error('Giao dịch không thành công. Không có tiền nào bị chuyển.')
+    if (result.failed) throw new Error(t('Giao dịch không thành công. Không có tiền nào bị chuyển.'))
     if (!result.pending) return result
     await new Promise((r) => setTimeout(r, 2000))
   }
-  throw new Error('Giao dịch đang được xử lý. Hãy tải lại trang sau ít phút.')
+  throw new Error(t('Giao dịch đang được xử lý. Hãy tải lại trang sau ít phút.'))
 }

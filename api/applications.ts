@@ -24,7 +24,10 @@ export default route(['POST'], async (req) => {
   const session = await requireSession(req)
   const input = body(req)
 
-  switch (action(req)) {
+  const act = action(req)
+  if ((act === 'apply' || act === 'withdraw') && session.account.role !== 'tester') throw forbidden('Only tester accounts can apply.')
+
+  switch (act) {
     case 'apply': {
       const campaign = await loadCampaign(uuidParam(input.campaignId, 'campaign'))
       const existing = must(await db().from('applications').select('id').eq('campaign_id', campaign.id)

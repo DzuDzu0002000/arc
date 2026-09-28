@@ -33,7 +33,7 @@ export default route(['GET'], async (req) => {
       report.autoAccepted++
     } catch (error) {
       report.errors++
-      console.error('BUGLINE_CRON_AUTO_ACCEPT', bug.id, error)
+      console.error('ARCHUNT_CRON_AUTO_ACCEPT', bug.id, error)
     }
   }
 
@@ -46,7 +46,7 @@ export default route(['GET'], async (req) => {
       report.paid++
     } catch (error) {
       report.errors++
-      console.error('BUGLINE_CRON_PAYOUT', bug.id, error)
+      console.error('ARCHUNT_CRON_PAYOUT', bug.id, error)
     }
   }
 

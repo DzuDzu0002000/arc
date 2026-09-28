@@ -6,11 +6,11 @@ interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
-/// @title BuglineEscrow
+/// @title ArcHuntEscrow
 /// @notice Holds each campaign's USDC budget. Money leaves only as a bug payout to a tester
 ///         or, after the grace period, as a refund of the remainder to the campaign owner.
 ///         The platform takes no fee and cannot withdraw to itself.
-contract BuglineEscrow {
+contract ArcHuntEscrow {
     uint64 public constant GRACE_PERIOD = 14 days;
 
     struct Campaign {

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import { Test } from "forge-std/Test.sol";
-import { BuglineEscrow, IERC20 } from "../src/BuglineEscrow.sol";
+import { ArcHuntEscrow, IERC20 } from "../src/ArcHuntEscrow.sol";
 
 contract MockUsdc {
     mapping(address => uint256) public balanceOf;
@@ -23,9 +23,9 @@ contract MockUsdc {
     }
 }
 
-contract BuglineEscrowTest is Test {
+contract ArcHuntEscrowTest is Test {
     MockUsdc usdc;
-    BuglineEscrow escrow;
+    ArcHuntEscrow escrow;
     address owner = address(0xA11CE);
     address tester = address(0xB0B);
     address arbiter = address(0xA2B);
@@ -34,7 +34,7 @@ contract BuglineEscrowTest is Test {
 
     function setUp() public {
         usdc = new MockUsdc();
-        escrow = new BuglineEscrow(IERC20(address(usdc)), arbiter);
+        escrow = new ArcHuntEscrow(IERC20(address(usdc)), arbiter);
         endsAt = uint64(block.timestamp + 7 days);
         usdc.mint(owner, 1_000e6);
         vm.startPrank(owner);
@@ -49,7 +49,7 @@ contract BuglineEscrowTest is Test {
         assertEq(usdc.balanceOf(tester), 50e6);
 
         vm.prank(owner);
-        vm.expectRevert(BuglineEscrow.AlreadyPaid.selector);
+        vm.expectRevert(ArcHuntEscrow.AlreadyPaid.selector);
         escrow.payBug(campaignId, keccak256("bug-1"), tester, 50e6);
     }
 
@@ -59,25 +59,25 @@ contract BuglineEscrowTest is Test {
         assertEq(usdc.balanceOf(tester), 100e6);
 
         vm.prank(arbiter);
-        vm.expectRevert(BuglineEscrow.PayoutTooLarge.selector);
+        vm.expectRevert(ArcHuntEscrow.PayoutTooLarge.selector);
         escrow.payBug(campaignId, keccak256("bug-3"), tester, 101e6);
     }
 
     function test_strangerCannotPay() public {
         vm.prank(tester);
-        vm.expectRevert(BuglineEscrow.NotOwnerOrArbiter.selector);
+        vm.expectRevert(ArcHuntEscrow.NotOwnerOrArbiter.selector);
         escrow.payBug(campaignId, keccak256("bug-4"), tester, 10e6);
     }
 
     function test_ownerCannotPayThemself() public {
         vm.prank(owner);
-        vm.expectRevert(BuglineEscrow.InvalidTester.selector);
+        vm.expectRevert(ArcHuntEscrow.InvalidTester.selector);
         escrow.payBug(campaignId, keccak256("bug-5"), owner, 10e6);
     }
 
     function test_withdrawOnlyAfterGrace() public {
         vm.prank(owner);
-        vm.expectRevert(BuglineEscrow.StillLocked.selector);
+        vm.expectRevert(ArcHuntEscrow.StillLocked.selector);
         escrow.withdrawRemaining(campaignId);
 
         vm.warp(uint256(endsAt) + 14 days);
@@ -86,7 +86,7 @@ contract BuglineEscrowTest is Test {
         assertEq(usdc.balanceOf(owner), 1_000e6);
 
         vm.prank(arbiter);
-        vm.expectRevert(BuglineEscrow.InsufficientBalance.selector);
+        vm.expectRevert(ArcHuntEscrow.InsufficientBalance.selector);
         escrow.payBug(campaignId, keccak256("bug-6"), tester, 1e6);
     }
 }

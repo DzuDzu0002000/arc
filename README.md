@@ -1,13 +1,24 @@
-# Bugline
+# ArcHunt
 
 Marketplace để dự án AI thuê tester tìm bug, trả thưởng bằng USDC trên **Arc Testnet**. Nền tảng không thu phí.
 
-- Dự án tạo chiến dịch, đặt bảng giá theo mức độ lỗi, rồi **nạp toàn bộ ngân sách vào escrow** (`BuglineEscrow`) trước khi mở.
+- Dự án tạo chiến dịch, đặt bảng giá theo mức độ lỗi, rồi **nạp toàn bộ ngân sách vào escrow** (`ArcHuntEscrow`) trước khi mở.
 - Tester ứng tuyển → được duyệt → gửi bug.
 - Dự án chấp nhận bug → ký lệnh `payBug` bằng PIN ví Circle → USDC đi thẳng từ escrow tới ví tester.
 - Dự án không phản hồi trong hạn → bug **tự được chấp nhận**, ví arbiter của nền tảng trả từ escrow.
 - Tester bị từ chối được **khiếu nại 1 lần** trong 3 ngày; admin phân xử.
 - Tiền còn lại được rút về 14 ngày sau ngày kết thúc chiến dịch.
+- Dự án xem **hồ sơ tester** trước khi duyệt: số dự án đã test, bug đã báo, bug được chấp nhận, tỷ lệ chấp nhận, số sao. Sau khi trả tiền cho bug, dự án **đánh giá tester 1–5 sao**.
+
+Đăng nhập bằng **Circle Wallet** (mã OTP qua email, ví SCA trên Arc được tạo tự động). Lần đầu, người dùng chọn một vai trò cố định:
+
+| Vai trò | Giao diện |
+| --- | --- |
+| Dự án | Tổng quan (escrow, đã trả, bug chờ xét) · Chiến dịch (tạo, nạp escrow, duyệt đơn) · Bug cần xét (chấp nhận, ký trả, đánh giá tester) · Ví & nạp tiền |
+| Tester | Khám phá & ứng tuyển · Bug của tôi (lọc theo trạng thái) · Tranh chấp · Ví |
+| Admin (theo Circle user id) | Xử lý tranh chấp: đang mở / đã xử lý |
+
+Giao diện có tiếng Việt và tiếng Anh (nút VI | EN). Bản dịch nằm ở `src/i18n-en.ts`; `npm test` báo lỗi nếu có chữ trên giao diện chưa được dịch.
 
 ## Kiến trúc
 
@@ -18,7 +29,7 @@ Marketplace để dự án AI thuê tester tìm bug, trả thưởng bằng USDC
 | Logic server | TypeScript, test bằng `node --test` | `server/` |
 | Database | Supabase Postgres (RLS bật, chỉ server truy cập) | `supabase/migrations/` |
 | Ví & đăng nhập | Circle User-Controlled Wallets (email OTP, ví SCA) | `server/circle.ts`, `src/circle.ts` |
-| Hợp đồng | Solidity `BuglineEscrow` | `contracts/` |
+| Hợp đồng | Solidity `ArcHuntEscrow` | `contracts/` |
 
 Quy tắc an toàn quan trọng:
 
@@ -39,7 +50,7 @@ npm install
 npm test
 ```
 
-`npm test` chạy logic nghiệp vụ, mã hoá lệnh gọi hợp đồng, và **chạy bytecode thật của `BuglineEscrow` trong EVM nội bộ** (không cần Foundry hay RPC).
+`npm test` chạy logic nghiệp vụ, mã hoá lệnh gọi hợp đồng, và **chạy bytecode thật của `ArcHuntEscrow` trong EVM nội bộ** (không cần Foundry hay RPC).
 
 ```bash
 npm run build
@@ -66,10 +77,11 @@ npm run dev:mock
 4. **Biến môi trường:** chép `.env.example` thành `.env` và điền đủ (trên Vercel: Project Settings → Environment Variables).
 5. **Chạy local cả API:**
    ```bash
-   npx vercel dev
+   npm run dev
    ```
-   `npm run dev` chỉ chạy giao diện, không có API.
+   Vite tự chạy các file trong `api/` tại `/api/*` (không cần Vercel CLI), đọc biến môi trường từ `.env`.
 6. **Cron:** `vercel.json` gọi `/api/cron/deadlines` mỗi giờ. Đặt `CRON_SECRET` trên Vercel.
+7. **Cấp quyền admin:** người cần quyền đăng nhập một lần, vào trang **Ví** và chép **Mã tài khoản Circle**. Thêm mã đó vào `ADMIN_CIRCLE_USER_IDS` (nhiều mã cách nhau bằng dấu phẩy) rồi deploy lại. Admin không xử lý được tranh chấp mà chính mình là chủ chiến dịch hoặc tester báo bug; server chặn việc này.
 
 Nếu có Foundry, `forge test` chạy thêm bộ test Solidity trong `contracts/test/` (cần `forge install foundry-rs/forge-std --root . --no-git` vào `contracts/lib`).
 

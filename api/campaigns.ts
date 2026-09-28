@@ -4,11 +4,11 @@ import { createContractExecution, resolveChallenge } from '../server/circle.js'
 import { db, must, type ApplicationRow, type CampaignRow } from '../server/db.js'
 import { env } from '../server/env.js'
 import { encodeFundBatch, encodeWithdraw, receiptFundsCampaign, receiptWithdraws, unixSeconds, uuidToBytes32 } from '../server/escrow.js'
-import { committedUnits, loadCampaign, payoutTable } from '../server/flows.js'
+import { committedUnits, loadCampaign, payoutTable, testerProfiles } from '../server/flows.js'
 import { action, badRequest, body, conflict, forbidden, notFound, route, uuidParam } from '../server/http.js'
 import { dbAmountToUnits, formatUsdc } from '../server/money.js'
 import { maxPayoutUnits, remainingBudget, SEVERITIES, validateCampaignInput, withdrawError, withdrawableAt, type Severity } from '../server/rules.js'
-import { getSession, requireSession, type Session } from '../server/session.js'
+import { getSession, requireRole, requireSession, type Session } from '../server/session.js'
 
 type Stats = { decided: number; accepted: number; timed_out: number; overturned: number; avg_response_days: number | null }
 
@@ -88,11 +88,18 @@ async function detail(id: string, session: Session | null) {
 async function manage(id: string, session: Session) {
   const campaign = await ownedCampaign(session, id)
   const [applications, bugs] = await Promise.all([
-    db().from('applications').select('id, status, message, devices, created_at, accounts(display_name)').eq('campaign_id', id).order('created_at'),
+    db().from('applications').select('id, status, message, devices, created_at, tester_account_id, accounts(display_name)').eq('campaign_id', id).order('created_at'),
     db().from('bugs').select('id, title, status, severity_claimed, severity_final, payout_amount, response_due_at, created_at, payout_tx, accounts(display_name)')
       .eq('campaign_id', id).order('created_at', { ascending: false }),
   ])
-  return { campaign: publicCampaign(campaign), applications: must(applications), bugs: must(bugs) }
+  // Projects judge applicants by their track record: campaigns tested, bugs found, stars from other projects.
+  const apps = must(applications) as { tester_account_id: string }[]
+  const profiles = await testerProfiles(apps.map((a) => a.tester_account_id))
+  return {
+    campaign: publicCampaign(campaign),
+    applications: apps.map((a) => ({ ...a, testerProfile: profiles.get(a.tester_account_id) })),
+    bugs: must(bugs),
+  }
 }
 
 async function create(session: Session & { wallet: { address: string } }, input: Record<string, unknown>) {
@@ -214,7 +221,7 @@ export default route(['GET', 'POST'], async (req) => {
     return detail(id, await getSession(req))
   }
 
-  const session = await requireSession(req)
+  const session = await requireRole(req, 'project')
   const input = body(req)
   switch (action(req)) {
     case 'create': return create(session, input)

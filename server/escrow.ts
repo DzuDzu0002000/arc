@@ -1,6 +1,6 @@
 import { decodeEventLog, encodeFunctionData, parseAbi, type Hex } from 'viem'
 
-// Keep in sync with contracts/src/BuglineEscrow.sol
+// Keep in sync with contracts/src/ArcHuntEscrow.sol
 export const escrowAbi = parseAbi([
   'function fund(bytes32 campaignId, uint128 amount, uint128 maxPayout, uint64 endsAt)',
   'function topUp(bytes32 campaignId, uint128 amount)',

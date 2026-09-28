@@ -1,4 +1,4 @@
-// Deploys BuglineEscrow to Arc Testnet.
+// Deploys ArcHuntEscrow to Arc Testnet.
 // Usage: DEPLOYER_PRIVATE_KEY=0x... ARBITER_ADDRESS=0x... npm run contracts:deploy
 // The deployer pays gas in USDC (get testnet USDC at https://faucet.circle.com).
 import { readFileSync } from 'node:fs'
@@ -13,7 +13,7 @@ if (!DEPLOYER_PRIVATE_KEY || !ARBITER_ADDRESS || !isAddress(ARBITER_ADDRESS)) {
   process.exit(1)
 }
 
-const artifact = JSON.parse(readFileSync(new URL('../contracts/out/BuglineEscrow.json', import.meta.url), 'utf8'))
+const artifact = JSON.parse(readFileSync(new URL('../contracts/out/ArcHuntEscrow.json', import.meta.url), 'utf8'))
 const transport = http(ARC_RPC_URL || arcTestnet.rpcUrls.default.http[0])
 const account = privateKeyToAccount(DEPLOYER_PRIVATE_KEY)
 const wallet = createWalletClient({ account, chain: arcTestnet, transport })
@@ -30,4 +30,4 @@ if (receipt.status !== 'success' || !receipt.contractAddress) {
   console.error('Deployment failed.')
   process.exit(1)
 }
-console.log(`BuglineEscrow deployed at ${receipt.contractAddress}\nSet ESCROW_ADDRESS=${receipt.contractAddress}`)
+console.log(`ArcHuntEscrow deployed at ${receipt.contractAddress}\nSet ESCROW_ADDRESS=${receipt.contractAddress}`)

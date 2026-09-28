@@ -3,12 +3,12 @@ import { createContractExecution } from '../server/circle.js'
 import { db, must, type BugRow, type CampaignRow } from '../server/db.js'
 import { env } from '../server/env.js'
 import { encodePayBug, uuidToBytes32 } from '../server/escrow.js'
-import { acceptBug, committedUnits, confirmOwnerPayout, loadBug, loadCampaign, payoutTable, transitionBug } from '../server/flows.js'
+import { acceptBug, committedUnits, confirmOwnerPayout, loadBug, loadCampaign, payoutTable, testerProfiles, transitionBug } from '../server/flows.js'
 import { action, badRequest, body, conflict, forbidden, route, uuidParam } from '../server/http.js'
 import { dbAmountToUnits, formatUsdc } from '../server/money.js'
 import {
   disputeDueAt, disputeError, minPayoutUnits, rejectError, remainingBudget, responseDueAt, SEVERITIES, submitBugError,
-  validateBugInput, type Severity,
+  validateBugInput, validateRating, type Severity,
 } from '../server/rules.js'
 import { requireSession, type Session } from '../server/session.js'
 
@@ -34,11 +34,13 @@ async function view(session: Session, id: string) {
   const campaign = await loadCampaign(bug.campaign_id)
   const role = roleFor(session, bug, campaign)
   if (!role) throw forbidden()
-  const [messages, dispute, tester, payouts] = await Promise.all([
+  const [messages, dispute, tester, payouts, rating, profiles] = await Promise.all([
     db().from('bug_messages').select('id, body, created_at, author_account_id, accounts(display_name)').eq('bug_id', id).order('created_at'),
     db().from('disputes').select('id, reason, status, resolution_note, created_at, resolved_at').eq('bug_id', id).maybeSingle(),
     db().from('accounts').select('display_name').eq('id', bug.tester_account_id).maybeSingle<{ display_name: string }>(),
     payoutTable(campaign.id),
+    db().from('tester_ratings').select('stars, comment, created_at').eq('bug_id', id).maybeSingle(),
+    role === 'tester' ? Promise.resolve(null) : testerProfiles([bug.tester_account_id]),
   ])
   return {
     role,
@@ -48,7 +50,10 @@ async function view(session: Session, id: string) {
       rejectReason: bug.reject_reason, rejectNote: bug.reject_note, duplicateOf: bug.duplicate_of, responseDueAt: bug.response_due_at,
       disputeDueAt: bug.dispute_due_at, decidedBy: bug.decided_by, payoutAmount: bug.payout_amount, payoutTx: bug.payout_tx,
       payoutPending: Boolean(bug.payout_challenge_id), createdAt: bug.created_at, testerName: must(tester)?.display_name || 'Tester',
+      testerId: bug.tester_account_id,
     },
+    rating: must(rating),
+    testerProfile: profiles?.get(bug.tester_account_id) ?? null,
     campaign: { id: campaign.id, title: campaign.title, productName: campaign.product_name },
     payouts: Object.fromEntries(SEVERITIES.filter((s) => payouts[s]).map((s) => [s, formatUsdc(payouts[s] as bigint)])),
     messages: must(messages),
@@ -111,7 +116,10 @@ export default route(['GET', 'POST'], async (req) => {
 
   const input = body(req)
   const act = action(req)
-  if (act === 'submit') return submit(session, input)
+  if (act === 'submit') {
+    if (session.account.role !== 'tester') throw forbidden('Only tester accounts can report bugs.')
+    return submit(session, input)
+  }
 
   const bug = await loadBug(uuidParam(input.id))
   const campaign = await loadCampaign(bug.campaign_id)
@@ -171,6 +179,18 @@ export default route(['GET', 'POST'], async (req) => {
         decided_at: now.toISOString(), decided_by: 'owner', dispute_due_at: disputeDueAt(now).toISOString(),
       })
       return { status: 'rejected' }
+    }
+    case 'rate': {
+      // After paying, the project rates the tester; the stars feed the tester's public profile.
+      ownerOnly()
+      const existing = must(await db().from('tester_ratings').select('id').eq('bug_id', bug.id).maybeSingle())
+      const result = validateRating(input, { status: bug.status, alreadyRated: Boolean(existing) })
+      if (!result.ok) throw conflict(result.error)
+      must(await db().from('tester_ratings').insert({
+        bug_id: bug.id, campaign_id: campaign.id, tester_account_id: bug.tester_account_id, rater_account_id: session.account.id,
+        stars: result.value.stars, comment: result.value.comment,
+      }))
+      return { stars: result.value.stars }
     }
     case 'dispute': {
       testerOnly()
