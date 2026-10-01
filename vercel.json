@@ -1,8 +1,17 @@
 {
+  "regions": [
+    "hnd1"
+  ],
   "rewrites": [
-    { "source": "/((?!api/|assets/|.*\\..*).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/|assets/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
   ],
   "crons": [
-    { "path": "/api/cron/deadlines", "schedule": "0 1 * * *" }
+    {
+      "path": "/api/cron/deadlines",
+      "schedule": "0 1 * * *"
+    }
   ]
 }
