@@ -76,6 +76,8 @@ export function SignIn() {
         <button className="btn primary block" type="submit" disabled={busy}>{busy ? t('Đang xử lý…') : t('Tiếp tục với Circle Wallet')}</button>
       </form>
       {status[step] && <p className="muted" role="status">{status[step]}</p>}
+      {step === 'otp' && <div className="alert warn">{t('Không thấy email? Hãy xem mục Thư rác (Spam) hoặc Quảng cáo. Mã được gửi từ auth@archunt.site; bấm "Không phải thư rác" để lần sau email vào hộp thư chính.')}</div>}
+      {step === 'wallet' && <div className="alert warn">{t('Hãy ghi nhớ mã PIN 6 số này. Bạn cần nó mỗi khi nạp hoặc trả USDC. ArcHunt không lưu và không khôi phục được mã PIN.')}</div>}
       {error && <div className="alert error" role="alert">{error}</div>}
     </main>
   )
