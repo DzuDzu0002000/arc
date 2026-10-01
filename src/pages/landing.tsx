@@ -342,6 +342,8 @@ export function Landing() {
           <div className="row wrap small">
             <a href="https://docs.arc.io" target="_blank" rel="noreferrer">{t('Tài liệu Arc')}</a>
             <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Faucet</a>
+            <Link to="/privacy">{t('Quyền riêng tư')}</Link>
+            <Link to="/terms">{t('Điều khoản')}</Link>
             <span className="muted">{t('Chạy trên Arc Testnet')}</span>
           </div>
         </div>

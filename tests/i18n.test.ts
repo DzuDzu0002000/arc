@@ -11,8 +11,8 @@ function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name)
     if (statSync(path).isDirectory()) return sourceFiles(path)
-    // mock.ts and mock-en.ts are demo data, i18n-en.ts is the dictionary itself.
-    return /\.tsx?$/.test(name) && !/^(mock|mock-en|i18n-en)\.ts$/.test(name) ? [path] : []
+    // mock.ts and mock-en.ts are demo data, i18n-en.ts is the dictionary itself, legal.tsx holds both languages in full.
+    return /\.tsx?$/.test(name) && !/^((mock|mock-en|i18n-en)\.ts|legal\.tsx)$/.test(name) ? [path] : []
   })
 }
 

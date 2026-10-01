@@ -3,6 +3,7 @@ import { api, type Role, type SessionInfo } from './api'
 import { Admin } from './pages/admin'
 import { SignIn } from './pages/auth'
 import { Landing } from './pages/landing'
+import { Privacy, Terms } from './pages/legal'
 import { CampaignDetail, Explore, ReportBug } from './pages/explore'
 import { ProjectHome, ReviewQueue } from './pages/project'
 import { ManageCampaign, MyProjects, NewCampaign } from './pages/projects'
@@ -91,6 +92,8 @@ export function App() {
 
   let page: ReactElement
   if (path === '/auth') page = <SignIn />
+  else if (path === '/privacy') page = <Privacy />
+  else if (path === '/terms') page = <Terms />
   else if (!isApp) page = <Landing />
   else if (!session.authenticated) page = <main className="page"><Loading error="" /></main>
   else if (!role) page = <Welcome />
