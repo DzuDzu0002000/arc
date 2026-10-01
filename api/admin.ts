@@ -13,7 +13,7 @@ export default route(['GET', 'POST'], async (req) => {
   if (req.method === 'GET') {
     const resolved = req.query.status === 'resolved'
     const query = db().from('disputes')
-      .select('id, reason, status, resolution_note, created_at, resolved_at, bugs(id, title, severity_claimed, severity_final, payout_amount, reject_reason, reject_note, tester_account_id, accounts(display_name), campaigns(id, title, product_name, owner_account_id))')
+      .select('id, reason, status, resolution_note, created_at, resolved_at, bugs(id, title, severity_claimed, severity_final, payout_amount, reject_reason, reject_note, tester_account_id, accounts(display_name), campaigns(id, title, title_en, product_name, owner_account_id))')
     const disputes = must(await (resolved
       ? query.in('status', ['upheld', 'dismissed']).order('resolved_at', { ascending: false }).limit(100)
       : query.eq('status', 'open').order('created_at')))

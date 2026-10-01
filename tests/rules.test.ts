@@ -25,6 +25,14 @@ test('accepts a well-formed campaign and fills defaults', () => {
   assert.equal(result.value.testUrl, null)
 })
 
+test('English copy is optional and validated when given', () => {
+  const plain = validateCampaignInput(campaignInput, now)
+  assert.ok(plain.ok && plain.value.english.title === null)
+  const english = validateCampaignInput({ ...campaignInput, titleEn: '  Test sign-in flows  ', scopeInEn: 'Login' }, now)
+  assert.ok(english.ok && english.value.english.title === 'Test sign-in flows' && english.value.english.scopeIn === 'Login')
+  assert.equal(validateCampaignInput({ ...campaignInput, titleEn: 'Hi' }, now).ok, false)
+})
+
 test('rejects campaigns that would mislead testers', () => {
   const cases: Array<[Record<string, unknown>, RegExp]> = [
     [{ payouts: {} }, /at least one severity/],

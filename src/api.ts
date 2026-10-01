@@ -34,6 +34,7 @@ export type Role = 'project' | 'tester'
 
 export type Campaign = {
   id: string; title: string; productName: string; description: string; scopeIn: string; scopeOut: string; testUrl: string | null
+  english: { title: string | null; description: string | null; scopeIn: string | null; scopeOut: string | null }
   platforms: string[]; testerSlots: number; budget: string; endsAt: string; responseHours: number
   status: 'draft' | 'funding' | 'open' | 'closed' | 'settled'; escrowId: string; fundTx: string | null; withdrawableAt: string; createdAt: string
 }
@@ -82,7 +83,7 @@ export type BugView = {
   }
   rating: Rating | null
   testerProfile: TesterProfile | null
-  campaign: { id: string; title: string; productName: string }
+  campaign: { id: string; title: string; titleEn: string | null; productName: string }
   payouts: Partial<Record<Severity, string>>
   messages: Array<{ id: string; body: string; created_at: string; author_account_id: string } & Named>
   dispute: { id: string; reason: string; status: string; resolution_note: string | null } | null
@@ -94,14 +95,14 @@ type DisputeInfo = { id: string; status: 'open' | 'upheld' | 'dismissed'; reason
 export type TesterBug = {
   id: string; title: string; status: BugStatus; severity_claimed: Severity; severity_final: Severity | null; payout_amount: string | null
   payout_tx: string | null; response_due_at: string | null; dispute_due_at: string | null; reject_reason: string | null; reject_note: string | null
-  created_at: string; campaigns: { id: string; title: string; product_name: string } | null
+  created_at: string; campaigns: { id: string; title: string; title_en: string | null; product_name: string } | null
   disputes: DisputeInfo | DisputeInfo[] | null
 }
 
 export type TesterMe = {
   role: 'tester'
   wallet: Wallet
-  applications: Array<{ id: string; status: string; created_at: string; campaigns: { id: string; title: string; product_name: string; status: string; ends_at: string } | null }>
+  applications: Array<{ id: string; status: string; created_at: string; campaigns: { id: string; title: string; title_en: string | null; product_name: string; status: string; ends_at: string } | null }>
   bugs: TesterBug[]
   profile: TesterProfile
 }
@@ -109,14 +110,14 @@ export type TesterMe = {
 export type ReviewBug = {
   id: string; campaign_id: string; title: string; status: BugStatus; severity_claimed: Severity; severity_final: Severity | null
   payout_amount: string | null; payout_tx: string | null; response_due_at: string | null; created_at: string
-  accounts: { display_name: string } | null; campaign: { id: string; title?: string; product_name?: string }
+  accounts: { display_name: string } | null; campaign: { id: string; title?: string; title_en?: string | null; product_name?: string }
   tester_ratings: { stars: number } | Array<{ stars: number }> | null
 }
 
 export type ProjectMe = {
   role: 'project'
   wallet: Wallet
-  campaigns: Array<{ id: string; title: string; product_name: string; status: Campaign['status']; budget: string; ends_at: string; fund_tx: string | null; bugsToReview: number }>
+  campaigns: Array<{ id: string; title: string; title_en: string | null; product_name: string; status: Campaign['status']; budget: string; ends_at: string; fund_tx: string | null; bugsToReview: number }>
   reviewQueue: ReviewBug[]
   totals: { lockedInEscrow: string; paidToTesters: string; toReview: number; awaitingSignature: number }
 }

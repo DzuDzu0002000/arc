@@ -5,13 +5,13 @@ import { dbAmountToUnits, formatUsdc } from '../server/money.js'
 import { testerProfiles } from '../server/flows.js'
 import { requireSession, type Session } from '../server/session.js'
 
-type OwnCampaign = { id: string; title: string; product_name: string; status: string; budget: string; ends_at: string; fund_tx: string | null; created_at: string }
+type OwnCampaign = { id: string; title: string; title_en: string | null; product_name: string; status: string; budget: string; ends_at: string; fund_tx: string | null; created_at: string }
 type QueueBug = { id: string; campaign_id: string; status: string; payout_amount: string | null }
 
 /** Project side: funding, what is waiting for review, and what has been paid out. */
 async function projectData(session: Session) {
   const campaigns = must(await db().from('campaigns')
-    .select('id, title, product_name, status, budget, ends_at, fund_tx, created_at')
+    .select('id, title, title_en, product_name, status, budget, ends_at, fund_tx, created_at')
     .eq('owner_account_id', session.account.id).order('created_at', { ascending: false })) as OwnCampaign[]
   const ids = campaigns.map((c) => c.id)
   const bugs = ids.length ? must(await db().from('bugs')
@@ -27,7 +27,7 @@ async function projectData(session: Session) {
     campaigns: campaigns.map((c) => ({
       ...c, bugsToReview: bugs.filter((b) => b.campaign_id === c.id && b.status === 'submitted').length,
     })),
-    reviewQueue: bugs.map((b) => ({ ...b, campaign: { id: b.campaign_id, title: byCampaign.get(b.campaign_id)?.title, product_name: byCampaign.get(b.campaign_id)?.product_name } })),
+    reviewQueue: bugs.map((b) => ({ ...b, campaign: { id: b.campaign_id, title: byCampaign.get(b.campaign_id)?.title, title_en: byCampaign.get(b.campaign_id)?.title_en, product_name: byCampaign.get(b.campaign_id)?.product_name } })),
     totals: {
       lockedInEscrow: formatUsdc(locked > 0n ? locked : 0n),
       paidToTesters: formatUsdc(paid),
@@ -40,9 +40,9 @@ async function projectData(session: Session) {
 /** Tester side: applications, every bug they reported, and their disputes. */
 async function testerData(session: Session) {
   const [applications, bugs] = await Promise.all([
-    db().from('applications').select('id, status, created_at, campaigns(id, title, product_name, status, ends_at)')
+    db().from('applications').select('id, status, created_at, campaigns(id, title, title_en, product_name, status, ends_at)')
       .eq('tester_account_id', session.account.id).order('created_at', { ascending: false }),
-    db().from('bugs').select('id, title, status, severity_claimed, severity_final, payout_amount, payout_tx, response_due_at, dispute_due_at, reject_reason, reject_note, created_at, campaigns(id, title, product_name), disputes(id, status, reason, resolution_note, created_at, resolved_at)')
+    db().from('bugs').select('id, title, status, severity_claimed, severity_final, payout_amount, payout_tx, response_due_at, dispute_due_at, reject_reason, reject_note, created_at, campaigns(id, title, title_en, product_name), disputes(id, status, reason, resolution_note, created_at, resolved_at)')
       .eq('tester_account_id', session.account.id).order('created_at', { ascending: false }).limit(300),
   ])
   const profile = (await testerProfiles([session.account.id])).get(session.account.id)

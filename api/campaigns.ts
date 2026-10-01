@@ -15,6 +15,7 @@ type Stats = { decided: number; accepted: number; timed_out: number; overturned:
 function publicCampaign(c: CampaignRow) {
   return {
     id: c.id, title: c.title, productName: c.product_name, description: c.description, scopeIn: c.scope_in, scopeOut: c.scope_out,
+    english: { title: c.title_en, description: c.description_en, scopeIn: c.scope_in_en, scopeOut: c.scope_out_en },
     testUrl: c.test_url, platforms: c.platforms, testerSlots: c.tester_slots, budget: formatUsdc(dbAmountToUnits(c.budget)),
     endsAt: c.ends_at, responseHours: c.response_hours, status: c.status, escrowId: c.escrow_id, fundTx: c.fund_tx,
     withdrawableAt: withdrawableAt(new Date(c.ends_at)).toISOString(), createdAt: c.created_at,
@@ -109,7 +110,8 @@ async function create(session: Session & { wallet: { address: string } }, input:
   const id = crypto.randomUUID()
   must(await db().from('campaigns').insert({
     id, owner_account_id: session.account.id, title: v.title, product_name: v.productName, description: v.description,
-    scope_in: v.scopeIn, scope_out: v.scopeOut, test_url: v.testUrl, platforms: v.platforms, tester_slots: v.testerSlots,
+    scope_in: v.scopeIn, scope_out: v.scopeOut, title_en: v.english.title, description_en: v.english.description, scope_in_en: v.english.scopeIn, scope_out_en: v.english.scopeOut,
+    test_url: v.testUrl, platforms: v.platforms, tester_slots: v.testerSlots,
     budget: v.budget, ends_at: v.endsAt, response_hours: v.responseHours, escrow_id: uuidToBytes32(id),
   }))
   must(await db().from('campaign_payouts').insert(
@@ -170,6 +172,7 @@ async function update(session: Session, id: string, input: Record<string, unknow
   const v = result.value
   must(await db().from('campaigns').update({
     title: v.title, product_name: v.productName, description: v.description, scope_in: v.scopeIn, scope_out: v.scopeOut,
+    title_en: v.english.title, description_en: v.english.description, scope_in_en: v.english.scopeIn, scope_out_en: v.english.scopeOut,
     test_url: v.testUrl, platforms: v.platforms, tester_slots: v.testerSlots, budget: v.budget, ends_at: v.endsAt,
     response_hours: v.responseHours, updated_at: new Date().toISOString(),
   }).eq('id', id).eq('status', 'draft'))

@@ -4,7 +4,7 @@ import { ReauthRequired, signAndConfirm } from '../circle'
 import { t } from '../i18n'
 import { TesterCard } from './tester-profile'
 import {
-  BackLink, BugStatusChip, Link, Loading, navigate, PLATFORM_LABEL, SEVERITY_ORDER, SeverityChip, timeLeft, txUrl, usdc, useLoad,
+  BackLink, BugStatusChip, Link, Loading, localized, navigate, PLATFORM_LABEL, SEVERITY_ORDER, SeverityChip, timeLeft, txUrl, usdc, useLoad,
 } from '../ui'
 
 const CAMPAIGN_STATUS: Record<string, string> = {
@@ -24,7 +24,7 @@ export function MyProjects() {
       ) : data.campaigns.map((c) => (
         <Link key={c.id} to={`/app/projects/${c.id}`} className="card stack">
           <div className="row between small"><span className="muted">{c.product_name}</span><span className="pill">{t(CAMPAIGN_STATUS[c.status])}</span></div>
-          <strong>{c.title}</strong>
+          <strong>{localized(c.title, c.title_en)}</strong>
           <div className="row between small muted">
             <span>{t('Ngân sách {amount} USDC', { amount: usdc(c.budget) })} · {timeLeft(c.ends_at)}</span>
             {c.bugsToReview > 0 && <span className="pill st-warn">{t('{n} bug chờ xét', { n: c.bugsToReview })}</span>}
@@ -43,6 +43,7 @@ function defaultEnd() {
 export function NewCampaign() {
   const [form, setForm] = useState({
     title: '', productName: '', description: '', scopeIn: '', scopeOut: '', testUrl: '',
+    titleEn: '', descriptionEn: '', scopeInEn: '', scopeOutEn: '',
     testerSlots: '10', budget: '', endDate: defaultEnd(), responseDays: '5',
   })
   const [platforms, setPlatforms] = useState<string[]>(['web'])
@@ -59,6 +60,7 @@ export function NewCampaign() {
       const result = await post<{ id: string }>('/api/campaigns', {
         action: 'create', title: form.title, productName: form.productName, description: form.description,
         scopeIn: form.scopeIn, scopeOut: form.scopeOut, testUrl: form.testUrl, platforms,
+        titleEn: form.titleEn, descriptionEn: form.descriptionEn, scopeInEn: form.scopeInEn, scopeOutEn: form.scopeOutEn,
         testerSlots: Number(form.testerSlots), budget: form.budget,
         payouts: Object.fromEntries(Object.entries(payouts).filter(([, v]) => v.trim())),
         endsAt: new Date(`${form.endDate}T23:59:00`).toISOString(), responseHours: Number(form.responseDays) * 24,
@@ -94,6 +96,17 @@ export function NewCampaign() {
             </div>
           </fieldset>
         </section>
+
+        <details className="card stack" style={{ gap: 14 }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>{t('Bản tiếng Anh (không bắt buộc)')}</summary>
+          <p className="small muted" style={{ margin: '8px 0 0' }}>{t('Người xem chọn English sẽ thấy nội dung này. Bỏ trống thì hiện bản gốc.')}</p>
+          <div className="stack" style={{ gap: 14, marginTop: 12 }}>
+            <label className="field"><span>{t('Tiêu đề (tiếng Anh)')}</span><input className="input" maxLength={120} value={form.titleEn} onChange={set('titleEn')} placeholder="Test sign-in and multilingual answers" /></label>
+            <label className="field"><span>{t('Giới thiệu (tiếng Anh)')}</span><textarea className="input" rows={3} maxLength={5000} value={form.descriptionEn} onChange={set('descriptionEn')} /></label>
+            <label className="field"><span>{t('Phạm vi test (tiếng Anh)')}</span><textarea className="input" rows={3} maxLength={3000} value={form.scopeInEn} onChange={set('scopeInEn')} /></label>
+            <label className="field"><span>{t('Ngoài phạm vi (tiếng Anh)')}</span><textarea className="input" rows={2} maxLength={3000} value={form.scopeOutEn} onChange={set('scopeOutEn')} /></label>
+          </div>
+        </details>
 
         <section className="card stack" style={{ gap: 14 }}>
           <div className="label">{t('2 · Tiền thưởng & thời gian')}</div>
@@ -158,7 +171,7 @@ export function ManageCampaign({ id }: { id: string }) {
       <BackLink to="/app/projects" />
       <div className="stack">
         <div className="row between small muted"><span>{c.productName}</span><span className="pill">{t(CAMPAIGN_STATUS[c.status])}</span></div>
-        <h1>{c.title}</h1>
+        <h1>{localized(c.title, c.english.title)}</h1>
         <div className="small muted">{t('Ngân sách {amount} USDC', { amount: usdc(c.budget) })} · {t('kết thúc: {time}', { time: timeLeft(c.endsAt) })}{c.fundTx && <> · <a href={txUrl(c.fundTx)} target="_blank" rel="noreferrer">{t('Giao dịch nạp')}</a></>}</div>
       </div>
 

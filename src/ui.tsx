@@ -34,7 +34,8 @@ export function useLoad<T>(load: () => Promise<T>, deps: unknown[]) {
   const [data, setData] = useState<T | null>(null)
   const [error, setError] = useState('')
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const run = useCallback(load, deps)
+  // Also reload when the viewer switches language (demo data and localized content change with it).
+  const run = useCallback(load, [...deps, getLang()])
   const reload = useCallback(() => {
     setError('')
     return run().then(setData).catch((e: Error) => setError(e.message))
@@ -83,6 +84,11 @@ export const REJECT_REASONS = Object.keys(REJECT_TEXT)
 export const rejectLabel = (reason: string | null | undefined) => (reason && REJECT_TEXT[reason] ? t(REJECT_TEXT[reason]) : reason ?? '')
 
 export const PLATFORM_LABEL: Record<string, string> = { web: 'Web', ios: 'iOS', android: 'Android', desktop: 'Desktop', api: 'API' }
+
+/** Content a project wrote in two languages: the English copy when the viewer picked English and one exists. */
+export function localized(original: string, english?: string | null) {
+  return getLang() === 'en' && english ? english : original
+}
 
 export function usdc(amount: string | null | undefined) {
   if (amount === null || amount === undefined) return '—'

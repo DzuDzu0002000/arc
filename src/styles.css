@@ -104,6 +104,28 @@ textarea.input { resize: vertical; }
 .tester-stats span { font-size: 12px; color: var(--muted); }
 @media (max-width: 480px) { .tester-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Explore: title left, search + filters right, campaigns in a responsive grid (4 / 3 / 2 / 1 per row) */
+.page.explore { max-width: 1440px; }
+.explore-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.explore-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.explore-search { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; width: 260px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--muted); }
+.explore-search:focus-within { outline: 3px solid rgba(15, 118, 110, .35); outline-offset: 2px; }
+.explore-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 14px; }
+.explore-tools .tab-chip { min-height: 36px; }
+.campaign-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.campaign-card { display: flex; flex-direction: column; gap: 10px; }
+.campaign-card h2 { font-family: var(--body); font-size: 17px; line-height: 1.35; margin: 0; }
+.campaign-stats { margin-top: auto; padding-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 13px; }
+.campaign-stats > div:last-child { text-align: right; }
+@media (max-width: 1500px) { .campaign-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1150px) { .campaign-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .campaign-grid { grid-template-columns: 1fr; }
+  .explore-tools, .explore-search { width: 100%; }
+}
+
 .lang-switch { display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; background: #ecEAE4; }
 .lang-switch button { min-width: 40px; min-height: 32px; border: 0; border-radius: 8px; background: transparent; font-weight: 700; font-size: 12px; letter-spacing: .4px; color: var(--muted); cursor: pointer; }
 .lang-switch button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(21, 23, 28, .08); }

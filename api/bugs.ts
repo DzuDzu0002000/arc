@@ -54,7 +54,7 @@ async function view(session: Session, id: string) {
     },
     rating: must(rating),
     testerProfile: profiles?.get(bug.tester_account_id) ?? null,
-    campaign: { id: campaign.id, title: campaign.title, productName: campaign.product_name },
+    campaign: { id: campaign.id, title: campaign.title, titleEn: campaign.title_en, productName: campaign.product_name },
     payouts: Object.fromEntries(SEVERITIES.filter((s) => payouts[s]).map((s) => [s, formatUsdc(payouts[s] as bigint)])),
     messages: must(messages),
     dispute: must(dispute),

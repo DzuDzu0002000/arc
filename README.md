@@ -64,7 +64,7 @@ npm run dev:mock
 
 ### Cài đặt đầy đủ
 
-1. **Supabase:** tạo project, chạy `supabase/migrations/202609250001_init.sql` trong SQL editor.
+1. **Supabase:** tạo project, chạy lần lượt **tất cả** file trong `supabase/migrations/` theo thứ tự tên file (init → account_roles → tester_ratings → campaign_english) trong SQL editor.
 2. **Circle:** tạo app User-Controlled Wallets trên [Circle Console](https://console.circle.com), bật đăng nhập email OTP, lấy `App ID` và API key testnet. Bật Gas Station cho Arc Testnet nếu muốn tài trợ gas cho người dùng.
 3. **Hợp đồng:**
    ```bash
@@ -80,7 +80,7 @@ npm run dev:mock
    npm run dev
    ```
    Vite tự chạy các file trong `api/` tại `/api/*` (không cần Vercel CLI), đọc biến môi trường từ `.env`.
-6. **Cron:** `vercel.json` gọi `/api/cron/deadlines` mỗi giờ. Đặt `CRON_SECRET` trên Vercel.
+6. **Cron:** `vercel.json` gọi `/api/cron/deadlines` mỗi ngày lúc 01:00 UTC (gói Vercel Hobby chỉ cho chạy mỗi ngày một lần; lên gói Pro thì đổi thành `0 * * * *` để chạy mỗi giờ). Đặt `CRON_SECRET` trên Vercel.
 7. **Cấp quyền admin:** người cần quyền đăng nhập một lần, vào trang **Ví** và chép **Mã tài khoản Circle**. Thêm mã đó vào `ADMIN_CIRCLE_USER_IDS` (nhiều mã cách nhau bằng dấu phẩy) rồi deploy lại. Admin không xử lý được tranh chấp mà chính mình là chủ chiến dịch hoặc tester báo bug; server chặn việc này.
 
 Nếu có Foundry, `forge test` chạy thêm bộ test Solidity trong `contracts/test/` (cần `forge install foundry-rs/forge-std --root . --no-git` vào `contracts/lib`).

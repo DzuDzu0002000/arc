@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api, one, type BugStatus, type ProjectMe } from '../api'
 import { t } from '../i18n'
-import { BugStatusChip, FAUCET_URL, Link, Loading, SeverityChip, timeLeft, usdc, useLoad } from '../ui'
+import { BugStatusChip, FAUCET_URL, Link, Loading, localized, SeverityChip, timeLeft, usdc, useLoad } from '../ui'
 
 const loadProject = () => api<ProjectMe>('/api/me')
 
@@ -44,7 +44,7 @@ export function ProjectHome() {
       {drafts.length > 0 && (
         <section className="alert warn">
           {t('{n} chiến dịch chưa nạp escrow nên tester chưa thấy:', { n: drafts.length })}{' '}
-          {drafts.map((c, i) => <span key={c.id}>{i > 0 && ', '}<Link to={`/app/projects/${c.id}`}>{c.title}</Link></span>)}
+          {drafts.map((c, i) => <span key={c.id}>{i > 0 && ', '}<Link to={`/app/projects/${c.id}`}>{localized(c.title, c.title_en)}</Link></span>)}
         </section>
       )}
 
@@ -62,7 +62,7 @@ export function ProjectHome() {
         <div className="row between"><div className="label">{t('Chiến dịch')}</div><Link to="/app/projects" className="small">{t('Quản lý')}</Link></div>
         {data.campaigns.length === 0 ? <div className="muted small">{t('Chưa có chiến dịch nào.')}</div> : data.campaigns.slice(0, 5).map((c) => (
           <Link key={c.id} to={`/app/projects/${c.id}`} className="row between divider" style={{ paddingTop: 10, textDecoration: 'none', color: 'inherit' }}>
-            <div><strong>{c.title}</strong><div className="small muted">{c.product_name} · {usdc(c.budget)} USDC · {timeLeft(c.ends_at)}</div></div>
+            <div><strong>{localized(c.title, c.title_en)}</strong><div className="small muted">{c.product_name} · {usdc(c.budget)} USDC · {timeLeft(c.ends_at)}</div></div>
             {c.bugsToReview > 0 ? <span className="pill st-warn">{t('{n} chờ xét', { n: c.bugsToReview })}</span> : c.fund_tx ? <span className="pill st-good">{t('Đã nạp escrow')}</span> : <span className="pill">{t('Chưa nạp')}</span>}
           </Link>
         ))}
@@ -107,7 +107,7 @@ export function ReviewQueue() {
           <span className="muted">{t('Chiến dịch')}</span>
           <select className="input" style={{ minHeight: 38, width: 'auto', maxWidth: '100%', minWidth: 0 }} value={campaign} onChange={(e) => setCampaign(e.target.value)}>
             <option value="all">{t('Tất cả')}</option>
-            {data.campaigns.map((c) => <option key={c.id} value={c.id}>{c.product_name} · {c.title}</option>)}
+            {data.campaigns.map((c) => <option key={c.id} value={c.id}>{c.product_name} · {localized(c.title, c.title_en)}</option>)}
           </select>
         </label>
       </div>

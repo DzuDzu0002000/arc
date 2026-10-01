@@ -3,7 +3,7 @@ import { api, type MeData } from '../api'
 import { useSession } from '../App'
 import { clearLogin } from '../circle'
 import { t } from '../i18n'
-import { addressUrl, FAUCET_URL, LangSwitch, Link, Loading, navigate, timeLeft, txUrl, usdc, useLoad } from '../ui'
+import { addressUrl, FAUCET_URL, LangSwitch, Link, localized, Loading, navigate, timeLeft, txUrl, usdc, useLoad } from '../ui'
 
 const demo = import.meta.env.DEV && import.meta.env.VITE_MOCK === '1'
 
@@ -73,7 +73,7 @@ export function Wallet() {
             {data.campaigns.filter((c) => c.fund_tx).length === 0 ? <div className="muted small">{t('Chưa nạp chiến dịch nào.')}</div>
               : data.campaigns.filter((c) => c.fund_tx).map((c) => (
                 <div key={c.id} className="row between divider" style={{ paddingTop: 8 }}>
-                  <div><Link to={`/app/projects/${c.id}`}>{c.title}</Link><div className="small muted">{c.product_name} · {t('kết thúc: {time}', { time: timeLeft(c.ends_at) })}</div></div>
+                  <div><Link to={`/app/projects/${c.id}`}>{localized(c.title, c.title_en)}</Link><div className="small muted">{c.product_name} · {t('kết thúc: {time}', { time: timeLeft(c.ends_at) })}</div></div>
                   <div style={{ textAlign: 'right' }}>
                     <strong>−{usdc(c.budget)}</strong>
                     <div className="small"><a href={txUrl(c.fund_tx as string)} target="_blank" rel="noreferrer">{t('Giao dịch')}</a></div>

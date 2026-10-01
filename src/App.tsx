@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactElement } from 'react'
 import { api, type Role, type SessionInfo } from './api'
 import { Admin } from './pages/admin'
-import { Landing, SignIn } from './pages/auth'
+import { SignIn } from './pages/auth'
+import { Landing } from './pages/landing'
 import { CampaignDetail, Explore, ReportBug } from './pages/explore'
 import { ProjectHome, ReviewQueue } from './pages/project'
 import { ManageCampaign, MyProjects, NewCampaign } from './pages/projects'
@@ -84,7 +85,6 @@ export function App() {
     if (!session) return
     if (isApp && !session.authenticated) navigate(`/auth?next=${encodeURIComponent(path)}`)
     else if (isApp && session.authenticated && !role && path !== '/app/welcome') navigate('/app/welcome')
-    else if (path === '/' && session.authenticated) navigate('/app')
   }, [session, isApp, path, role])
 
   if (!session) return <main className="page"><Loading error={error} onRetry={refresh} /></main>

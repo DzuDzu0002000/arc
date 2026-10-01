@@ -14,27 +14,6 @@ function Header() {
   )
 }
 
-export function Landing() {
-  return (
-    <main className="hero">
-      <Header />
-      <h1 style={{ marginTop: 40 }}>{t('Test sản phẩm AI.')}<br />{t('Nhận USDC cho mỗi bug được duyệt.')}</h1>
-      <p className="muted" style={{ fontSize: 17, margin: 0 }}>
-        {t('Dự án AI khóa sẵn tiền thưởng trong escrow trên Arc. Bạn tìm bug, dự án duyệt, tiền về ví bạn ngay.')}
-      </p>
-      <div className="row wrap">
-        <Link to="/auth" className="btn primary">{t('Bắt đầu')}</Link>
-        <Link to="/auth?next=/app/projects/new" className="btn">{t('Đăng chiến dịch test')}</Link>
-      </div>
-      <ul className="stack muted" style={{ marginTop: 'auto', paddingLeft: 18 }}>
-        <li>{t('Đăng nhập bằng email qua Circle Wallet, ví được tạo tự động.')}</li>
-        <li>{t('Nền tảng không thu phí. Tester nhận đủ 100%.')}</li>
-        <li>{t('Dự án không phản hồi đúng hạn thì bug tự được chấp nhận.')}</li>
-      </ul>
-    </main>
-  )
-}
-
 type Step = 'email' | 'otp' | 'wallet' | 'session'
 
 export function SignIn() {

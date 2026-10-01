@@ -21,7 +21,8 @@ export type AccountRow = { id: string; circle_user_id: string; email: string | n
 export type WalletRow = { account_id: string; circle_wallet_id: string; address: string }
 export type CampaignRow = {
   id: string; owner_account_id: string; job_type: string; title: string; product_name: string; description: string
-  scope_in: string; scope_out: string; test_url: string | null; platforms: string[]; tester_slots: number
+  scope_in: string; scope_out: string; title_en: string | null; description_en: string | null; scope_in_en: string | null; scope_out_en: string | null
+  test_url: string | null; platforms: string[]; tester_slots: number
   budget: string; ends_at: string; response_hours: number; status: 'draft' | 'funding' | 'open' | 'closed' | 'settled'
   escrow_id: `0x${string}`; fund_challenge_id: string | null; fund_tx: string | null
   withdraw_challenge_id: string | null; withdraw_tx: string | null

@@ -1,3 +1,6 @@
+import { getLang } from './i18n'
+import { sampleEn } from './mock-en'
+
 // Dev-only demo mode (`npm run dev:mock`): answers /api/* in the browser with sample data so the UI
 // can be clicked through without Circle, Supabase or Arc. Never included in production builds.
 const day = 86_400_000
@@ -31,6 +34,42 @@ const campaigns: Campaign[] = [
     payouts: { critical: '60', high: '30', medium: '10' },
   },
   {
+    id: 'b1c2d3e4-0001-4a00-8a00-000000000001', owner: 'acc-documind', ownerName: 'DocuMind Labs', title: 'Kiểm thử tóm tắt hợp đồng PDF', productName: 'DocuMind',
+    description: '', scopeIn: '', scopeOut: '', testUrl: null, platforms: ['web'], testerSlots: 8,
+    budget: '900', endsAt: iso(9 * day), responseHours: 120, status: 'open', fundTx: tx('1'), createdAt: iso(-5 * day),
+    payouts: {critical: '120',high: '60',medium: '20',low: '5'},
+  },
+  {
+    id: 'b1c2d3e4-0002-4a00-8a00-000000000002', owner: 'acc-snapcaption', ownerName: 'SnapCaption', title: 'Tìm lỗi phụ đề tự động cho video ngắn', productName: 'SnapCaption',
+    description: '', scopeIn: '', scopeOut: '', testUrl: null, platforms: ['ios','android'], testerSlots: 12,
+    budget: '700', endsAt: iso(14 * day), responseHours: 120, status: 'open', fundTx: tx('2'), createdAt: iso(-5 * day),
+    payouts: {critical: '80',high: '40',medium: '15'},
+  },
+  {
+    id: 'b1c2d3e4-0003-4a00-8a00-000000000003', owner: 'acc-translategpt', ownerName: 'TranslateGPT', title: 'Test API dịch thuật đa ngôn ngữ', productName: 'TranslateGPT',
+    description: '', scopeIn: '', scopeOut: '', testUrl: null, platforms: ['api'], testerSlots: 6,
+    budget: '1500', endsAt: iso(20 * day), responseHours: 120, status: 'open', fundTx: tx('3'), createdAt: iso(-1 * day),
+    payouts: {critical: '150',high: '70',medium: '25',low: '5'},
+  },
+  {
+    id: 'b1c2d3e4-0004-4a00-8a00-000000000004', owner: 'acc-studybuddy', ownerName: 'StudyBuddy', title: 'Kiểm tra gia sư AI trả lời bài tập toán', productName: 'StudyBuddy',
+    description: '', scopeIn: '', scopeOut: '', testUrl: null, platforms: ['web','ios'], testerSlots: 20,
+    budget: '400', endsAt: iso(7 * day), responseHours: 120, status: 'open', fundTx: tx('4'), createdAt: iso(-3 * day),
+    payouts: {high: '30',medium: '12',low: '4'},
+  },
+  {
+    id: 'b1c2d3e4-0005-4a00-8a00-000000000005', owner: 'acc-shopassist', ownerName: 'ShopAssist', title: 'Test trợ lý mua sắm gợi ý sản phẩm', productName: 'ShopAssist',
+    description: '', scopeIn: '', scopeOut: '', testUrl: null, platforms: ['web','android'], testerSlots: 10,
+    budget: '650', endsAt: iso(16 * day), responseHours: 120, status: 'open', fundTx: tx('5'), createdAt: iso(-2 * day),
+    payouts: {critical: '90',high: '45',medium: '15',low: '5'},
+  },
+  {
+    id: 'b1c2d3e4-0006-4a00-8a00-000000000006', owner: 'acc-codepilot', ownerName: 'CodePilot', title: 'Săn lỗi plugin sinh code cho VS Code', productName: 'CodePilot',
+    description: '', scopeIn: '', scopeOut: '', testUrl: null, platforms: ['desktop'], testerSlots: 5,
+    budget: '1100', endsAt: iso(25 * day), responseHours: 120, status: 'open', fundTx: tx('6'), createdAt: iso(-1 * day),
+    payouts: {critical: '200',high: '80',medium: '30'},
+  },
+  {
     id: '9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d', owner: ME.id, ownerName: 'PromptForge', title: 'Kiểm thử API sinh ảnh', productName: 'PromptForge',
     description: 'API sinh ảnh từ prompt.', scopeIn: 'Endpoint /generate và /upscale', scopeOut: '', testUrl: 'https://example.com/docs', platforms: ['api'],
     testerSlots: 5, budget: '300', endsAt: iso(9 * day), responseHours: 120, status: 'open', fundTx: tx('d'), createdAt: iso(-2 * day),
@@ -43,6 +82,8 @@ const campaigns: Campaign[] = [
     payouts: { critical: '100', high: '40', medium: '15' },
   },
 ]
+
+const PROMPTFORGE_ID = '9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d' // the demo user's own funded campaign
 
 type Bug = Record<string, unknown> & { id: string; campaignId: string; tester: string; testerName: string; status: string; title: string; severityClaimed: string }
 const bug = (b: Partial<Bug> & Pick<Bug, 'id' | 'campaignId' | 'tester' | 'testerName' | 'status' | 'title' | 'severityClaimed'>): Bug => ({
@@ -59,16 +100,16 @@ const bugs: Bug[] = [
   // A dispute between two other parties, so the demo admin can resolve it.
   bug({ id: '9e0f1a2b-3c4d-4e5f-8a6b-7c8d9e0f1a2b', campaignId: campaigns[0].id, tester: 'd0000000-0000-4000-8000-00000000000d', testerName: 'thu.nguyen', status: 'disputed', title: 'Chatbot trả lời bằng tiếng Anh khi hỏi bằng tiếng Việt không dấu', severityClaimed: 'medium', rejectReason: 'out_of_scope', rejectNote: 'Tiếng Việt không dấu chưa hỗ trợ.', dispute: { id: 'd-other', status: 'open', reason: 'Phạm vi ghi "Trả lời bằng tiếng Việt", không loại trừ tiếng Việt không dấu.', resolution_note: null, created_at: iso(-8 * hour), resolved_at: null } }),
   // Reported to the demo user's own campaign (project side).
-  bug({ id: '2d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f6a', campaignId: campaigns[2].id, tester: 'd0000000-0000-4000-8000-00000000000b', testerName: 'lan.tester', status: 'submitted', title: '/upscale trả 500 khi ảnh đầu vào là PNG trong suốt', steps: '1. Gọi /generate với prompt bất kỳ\n2. Gửi ảnh PNG có kênh alpha tới /upscale', expected: 'Ảnh được phóng to', actual: 'HTTP 500, body rỗng', environment: 'curl 8.9, macOS 15', evidenceUrls: ['https://gist.github.com/demo'], severityClaimed: 'high', responseDueAt: iso(52 * hour), createdAt: iso(-3 * hour) }),
-  bug({ id: '3e4f5a6b-7c8d-4e9f-8a0b-2c3d4e5f6a7b', campaignId: campaigns[2].id, tester: 'd0000000-0000-4000-8000-00000000000c', testerName: 'hung.dev', status: 'submitted', title: 'Prompt tiếng Việt có dấu bị lỗi mã hoá trong metadata', steps: '1. Gọi /generate với prompt "phố cổ Hội An"\n2. Xem trường prompt trong response', expected: 'Giữ nguyên dấu', actual: 'Hiện "ph? c? H?i An"', environment: 'Postman 11', severityClaimed: 'low', responseDueAt: iso(4 * day), createdAt: iso(-hour) }),
-  bug({ id: '7c8d9e0f-1a2b-4c3d-8e4f-5a6b7c8d9e0f', campaignId: campaigns[2].id, tester: 'd0000000-0000-4000-8000-00000000000b', testerName: 'lan.tester', status: 'accepted', title: 'Giới hạn rate limit không trả header Retry-After', severityClaimed: 'medium', severityFinal: 'medium', payoutAmount: '15', decidedBy: 'owner', createdAt: iso(-day) }),
-  bug({ id: '8d9e0f1a-2b3c-4d4e-9f5a-6b7c8d9e0f1a', campaignId: campaigns[2].id, tester: 'd0000000-0000-4000-8000-00000000000d', testerName: 'thu.nguyen', status: 'paid', title: 'Ảnh 4K bị crop mất viền phải', severityClaimed: 'high', severityFinal: 'high', payoutAmount: '40', payoutTx: tx('e'), decidedBy: 'owner', createdAt: iso(-2 * day) }),
+  bug({ id: '2d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f6a', campaignId: PROMPTFORGE_ID, tester: 'd0000000-0000-4000-8000-00000000000b', testerName: 'lan.tester', status: 'submitted', title: '/upscale trả 500 khi ảnh đầu vào là PNG trong suốt', steps: '1. Gọi /generate với prompt bất kỳ\n2. Gửi ảnh PNG có kênh alpha tới /upscale', expected: 'Ảnh được phóng to', actual: 'HTTP 500, body rỗng', environment: 'curl 8.9, macOS 15', evidenceUrls: ['https://gist.github.com/demo'], severityClaimed: 'high', responseDueAt: iso(52 * hour), createdAt: iso(-3 * hour) }),
+  bug({ id: '3e4f5a6b-7c8d-4e9f-8a0b-2c3d4e5f6a7b', campaignId: PROMPTFORGE_ID, tester: 'd0000000-0000-4000-8000-00000000000c', testerName: 'hung.dev', status: 'submitted', title: 'Prompt tiếng Việt có dấu bị lỗi mã hoá trong metadata', steps: '1. Gọi /generate với prompt "phố cổ Hội An"\n2. Xem trường prompt trong response', expected: 'Giữ nguyên dấu', actual: 'Hiện "ph? c? H?i An"', environment: 'Postman 11', severityClaimed: 'low', responseDueAt: iso(4 * day), createdAt: iso(-hour) }),
+  bug({ id: '7c8d9e0f-1a2b-4c3d-8e4f-5a6b7c8d9e0f', campaignId: PROMPTFORGE_ID, tester: 'd0000000-0000-4000-8000-00000000000b', testerName: 'lan.tester', status: 'accepted', title: 'Giới hạn rate limit không trả header Retry-After', severityClaimed: 'medium', severityFinal: 'medium', payoutAmount: '15', decidedBy: 'owner', createdAt: iso(-day) }),
+  bug({ id: '8d9e0f1a-2b3c-4d4e-9f5a-6b7c8d9e0f1a', campaignId: PROMPTFORGE_ID, tester: 'd0000000-0000-4000-8000-00000000000d', testerName: 'thu.nguyen', status: 'paid', title: 'Ảnh 4K bị crop mất viền phải', severityClaimed: 'high', severityFinal: 'high', payoutAmount: '40', payoutTx: tx('e'), decidedBy: 'owner', createdAt: iso(-2 * day) }),
 ]
 const applications = [
   { id: 'app-1', campaignId: campaigns[0].id, tester: ME.id, testerName: ME.displayName, status: 'approved', message: '', devices: 'iPhone 15', createdAt: iso(-3 * day) },
   { id: 'app-4', campaignId: campaigns[1].id, tester: ME.id, testerName: ME.displayName, status: 'approved', message: '', devices: 'Pixel 8', createdAt: iso(-day) },
-  { id: 'app-2', campaignId: campaigns[2].id, tester: 'd0000000-0000-4000-8000-00000000000b', testerName: 'lan.tester', status: 'approved', message: 'QA 3 năm, chuyên test API.', devices: 'macOS, Postman', createdAt: iso(-2 * day) },
-  { id: 'app-3', campaignId: campaigns[2].id, tester: 'd0000000-0000-4000-8000-00000000000d', testerName: 'thu.nguyen', status: 'pending', message: 'Mình từng test API của nhiều dịch vụ sinh ảnh.', devices: 'Windows 11, Insomnia', createdAt: iso(-5 * hour) },
+  { id: 'app-2', campaignId: PROMPTFORGE_ID, tester: 'd0000000-0000-4000-8000-00000000000b', testerName: 'lan.tester', status: 'approved', message: 'QA 3 năm, chuyên test API.', devices: 'macOS, Postman', createdAt: iso(-2 * day) },
+  { id: 'app-3', campaignId: PROMPTFORGE_ID, tester: 'd0000000-0000-4000-8000-00000000000d', testerName: 'thu.nguyen', status: 'pending', message: 'Mình từng test API của nhiều dịch vụ sinh ảnh.', devices: 'Windows 11, Insomnia', createdAt: iso(-5 * hour) },
 ]
 
 const find = <T extends { id: string }>(list: T[], id: unknown) => list.find((x) => x.id === id)
@@ -77,7 +118,12 @@ const payoutsOf = (c: Campaign) => c.payouts as Record<string, string>
 const sum = (list: Bug[]) => list.reduce((s, b) => s + Number(b.payoutAmount || 0), 0)
 const committed = (c: Campaign) => sum(bugs.filter((b) => b.campaignId === c.id && (b.status === 'accepted' || b.status === 'paid')))
 const paidOut = (c: Campaign) => sum(bugs.filter((b) => b.campaignId === c.id && b.status === 'paid'))
-const publicCampaign = (c: Campaign) => ({ ...c, escrowId: '0x0', withdrawableAt: new Date(new Date(c.endsAt).getTime() + 14 * day).toISOString() })
+// Sample campaigns carry an English copy, as if the project filled the optional English fields.
+const englishOf = (c: Campaign) => ({
+  title: sampleEn[c.title] ?? null, description: sampleEn[String(c.description ?? '')] ?? null,
+  scopeIn: sampleEn[String(c.scopeIn ?? '')] ?? null, scopeOut: sampleEn[String(c.scopeOut ?? '')] ?? null,
+})
+const publicCampaign = (c: Campaign) => ({ ...c, english: englishOf(c), escrowId: '0x0', withdrawableAt: new Date(new Date(c.endsAt).getTime() + 14 * day).toISOString() })
 const approvedCount = (c: Campaign) => Math.min(applications.filter((a) => a.campaignId === c.id && a.status === 'approved').length + 5, c.testerSlots)
 const disputeOf = (b: Bug) => (b.dispute as Record<string, unknown> | undefined) ?? null
 const bugRow = (b: Bug) => ({
@@ -147,7 +193,7 @@ function me() {
     const funded = own.filter((c) => c.fundTx)
     return {
       role, wallet,
-      campaigns: own.map((c) => ({ id: c.id, title: c.title, product_name: c.productName, status: c.status, budget: c.budget, ends_at: c.endsAt, fund_tx: c.fundTx, created_at: c.createdAt, bugsToReview: queue.filter((b) => b.campaignId === c.id && b.status === 'submitted').length })),
+      campaigns: own.map((c) => ({ id: c.id, title: c.title, title_en: englishOf(c).title, product_name: c.productName, status: c.status, budget: c.budget, ends_at: c.endsAt, fund_tx: c.fundTx, created_at: c.createdAt, bugsToReview: queue.filter((b) => b.campaignId === c.id && b.status === 'submitted').length })),
       reviewQueue: queue.map(bugRow),
       totals: {
         lockedInEscrow: String(funded.reduce((s, c) => s + Number(c.budget) - paidOut(c), 0)),
@@ -301,6 +347,15 @@ function patch(path: string, body: Record<string, unknown>) {
   return { role }
 }
 
+/** In English, sample bug reports, notes and comments read as if testers and projects wrote them in English. */
+function inViewerLanguage(value: unknown): unknown {
+  if (getLang() !== 'en') return value
+  if (typeof value === 'string') return sampleEn[value] ?? value
+  if (Array.isArray(value)) return value.map(inViewerLanguage)
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, inViewerLanguage(v)]))
+  return value
+}
+
 export function installMockApi() {
   const realFetch = window.fetch.bind(window)
   window.fetch = async (input, init) => {
@@ -313,7 +368,7 @@ export function installMockApi() {
       : method === 'PATCH' ? patch(url.pathname, body)
       : method === 'DELETE' ? (() => { role = null; try { sessionStorage.removeItem(ROLE_KEY) } catch { /* private mode */ } return { authenticated: false } })()
       : get(url.pathname, url.searchParams)
-    return new Response(JSON.stringify(result ?? { error: 'Không tìm thấy (dữ liệu mẫu).' }), {
+    return new Response(JSON.stringify(inViewerLanguage(result ?? { error: 'Không tìm thấy (dữ liệu mẫu).' })), {
       status: result ? 200 : 404, headers: { 'Content-Type': 'application/json' },
     })
   }

@@ -3,7 +3,7 @@ import { api, one, type BugStatus, type TesterBug, type TesterMe } from '../api'
 import { useSession } from '../App'
 import { t } from '../i18n'
 import { Stars } from './tester-profile'
-import { BugStatusChip, dateTime, Link, Loading, rejectLabel, SeverityChip, timeLeft, usdc, useLoad } from '../ui'
+import { BugStatusChip, dateTime, Link, Loading, localized, rejectLabel, SeverityChip, timeLeft, usdc, useLoad } from '../ui'
 
 const loadTester = () => api<TesterMe>('/api/me')
 
@@ -80,7 +80,7 @@ export function MyBugs() {
       {pending.length > 0 && (
         <section className="card stack">
           <div className="label">{t('Đơn ứng tuyển đang chờ duyệt')}</div>
-          {pending.map((a) => <Link key={a.id} to={`/app/c/${a.campaigns!.id}`}>{a.campaigns!.product_name} · {a.campaigns!.title}</Link>)}
+          {pending.map((a) => <Link key={a.id} to={`/app/c/${a.campaigns!.id}`}>{a.campaigns!.product_name} · {localized(a.campaigns!.title, a.campaigns!.title_en)}</Link>)}
         </section>
       )}
     </main>
