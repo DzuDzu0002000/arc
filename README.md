@@ -20,6 +20,11 @@ Marketplace để dự án AI thuê tester tìm bug, trả thưởng bằng USDC
 
 Giao diện có tiếng Việt và tiếng Anh (nút VI | EN). Bản dịch nằm ở `src/i18n-en.ts`; `npm test` báo lỗi nếu có chữ trên giao diện chưa được dịch.
 
+## Bản đang chạy
+
+- Web: https://www.archunt.site
+- `ArcHuntEscrow` trên Arc Testnet: [`0x2b2095520af8d56e7439854f8a9c3e6ad8567bdd`](https://testnet.arcscan.app/address/0x2b2095520af8d56e7439854f8a9c3e6ad8567bdd), arbiter `0x38De3C6DB1e957F03b02273c4059f2D70B9AE20d`
+
 ## Kiến trúc
 
 | Phần | Công nghệ | Thư mục |
