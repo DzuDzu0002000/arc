@@ -4,11 +4,15 @@ import { ApiError, post } from './api'
 import { t } from './i18n'
 
 const appId = import.meta.env.VITE_CIRCLE_APP_ID as string | undefined
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
+const GOOGLE_KEY = 'archunt.google'
+/** Google sign-in is offered only once a Google OAuth client id is configured. */
+export const googleEnabled = Boolean(googleClientId)
 const STORAGE_KEY = 'archunt.circle'
 // Demo mode (`npm run dev:mock`): skip the Circle SDK and pretend every PIN prompt succeeds.
 const demo = import.meta.env.DEV && import.meta.env.VITE_MOCK === '1'
 
-export type CircleLogin = { userToken: string; encryptionKey: string; refreshToken: string; deviceId: string }
+export type CircleLogin = { userToken: string; encryptionKey: string; refreshToken: string; deviceId: string; email?: string }
 
 let loginWaiter: { resolve: (login: Omit<CircleLogin, 'deviceId'>) => void; reject: (error: Error) => void } | null = null
 
@@ -21,7 +25,8 @@ function onLoginComplete(error: unknown, result: unknown) {
     waiter.reject(new Error((error as { message?: string } | null)?.message || t('Mã OTP không hợp lệ hoặc đã hết hạn.')))
     return
   }
-  waiter.resolve({ userToken: r.userToken, encryptionKey: r.encryptionKey, refreshToken: r.refreshToken || '' })
+  const email = (result as { oAuthInfo?: { socialUserInfo?: { email?: string } } }).oAuthInfo?.socialUserInfo?.email
+  waiter.resolve({ userToken: r.userToken, encryptionKey: r.encryptionKey, refreshToken: r.refreshToken || '', email })
 }
 
 async function newSdk(): Promise<W3SSdk> {
@@ -43,6 +48,47 @@ export async function loginWithEmail(email: string): Promise<CircleLogin> {
   sdk.updateConfigs({ appSettings: { appId: appId as string }, loginConfigs: tokens }, onLoginComplete)
   sdk.verifyOtp()
   const result = { ...(await login), deviceId }
+  saveLogin(result)
+  return result
+}
+
+function googleConfigs(tokens: { deviceToken: string; deviceEncryptionKey: string }) {
+  return {
+    appSettings: { appId: appId as string },
+    loginConfigs: { ...tokens, google: { clientId: googleClientId as string, redirectUri: `${window.location.origin}/auth`, selectAccountPrompt: true } },
+  }
+}
+
+/** Sends the browser to Google. The page comes back to /auth, where finishGoogleLogin() completes it. */
+export async function startGoogleLogin(): Promise<void> {
+  if (!googleClientId) throw new Error(t('Đăng nhập Google chưa được cấu hình.'))
+  const sdk = await newSdk()
+  const deviceId = await sdk.getDeviceId()
+  const tokens = await post<{ deviceToken: string; deviceEncryptionKey: string }>('/api/auth/social', { deviceId })
+  try { sessionStorage.setItem(GOOGLE_KEY, JSON.stringify({ ...tokens, deviceId })) } catch { /* private mode */ }
+  sdk.updateConfigs(googleConfigs(tokens), onLoginComplete)
+  // SocialLoginProvider.GOOGLE; the enum is not exported from the package entry.
+  await sdk.performLogin('Google' as Parameters<W3SSdk['performLogin']>[0])
+}
+
+/** True when the page has just come back from Google with a pending sign-in. */
+export function hasGoogleReturn(): boolean {
+  try { return Boolean(sessionStorage.getItem(GOOGLE_KEY)) && window.location.hash.length > 1 } catch { return false }
+}
+
+/** Lets Circle's SDK verify the Google token from the URL and returns the Circle login. */
+export async function finishGoogleLogin(): Promise<CircleLogin> {
+  let pending: { deviceToken: string; deviceEncryptionKey: string; deviceId: string } | null = null
+  try { pending = JSON.parse(sessionStorage.getItem(GOOGLE_KEY) || 'null'); sessionStorage.removeItem(GOOGLE_KEY) } catch { /* private mode */ }
+  if (!pending || !appId || !googleClientId) throw new Error(t('Đăng nhập Google không thành công. Thử lại.'))
+  const login = new Promise<Omit<CircleLogin, 'deviceId'>>((resolve, reject) => { loginWaiter = { resolve, reject } })
+  const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
+  document.getElementById('sdkIframe')?.remove()
+  ;(W3SSdk as unknown as { instance: unknown }).instance = null
+  // The constructor reads the token Google put in the URL hash and asks Circle to verify it.
+  new W3SSdk(googleConfigs(pending), onLoginComplete)
+  const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(t('Đăng nhập Google không thành công. Thử lại.'))), 60_000))
+  const result = { ...(await Promise.race([login, timeout])), deviceId: pending.deviceId }
   saveLogin(result)
   return result
 }

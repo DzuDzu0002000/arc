@@ -52,6 +52,15 @@ export async function requestEmailOtp(email: string, deviceId: string) {
   return { deviceToken, deviceEncryptionKey, otpToken }
 }
 
+/** Device token for Google sign-in. Google returns to the browser, and Circle's SDK finishes the login with this token. */
+export async function requestSocialDeviceToken(deviceId: string) {
+  const result = await call('/users/social/token', { method: 'POST', body: { idempotencyKey: crypto.randomUUID(), deviceId } })
+  if (!result.ok || !result.data) circleError(result, 'Could not start Google sign-in.')
+  const { deviceToken, deviceEncryptionKey } = result.data
+  if (typeof deviceToken !== 'string' || typeof deviceEncryptionKey !== 'string') throw new HttpError(502, 'Could not start Google sign-in.')
+  return { deviceToken, deviceEncryptionKey }
+}
+
 /** Returns the Circle user id the token belongs to, or null if Circle does not accept the token. */
 export async function verifyUserToken(userToken: string): Promise<string | null> {
   const result = await call('/user', { userToken })
