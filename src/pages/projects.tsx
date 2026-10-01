@@ -90,7 +90,7 @@ export function NewCampaign() {
             <div className="row wrap" style={{ gap: 8 }}>
               {Object.entries(PLATFORM_LABEL).map(([value, label]) => (
                 <button key={value} type="button" className="tab-chip" aria-pressed={platforms.includes(value)}
-                  style={platforms.includes(value) ? { background: 'var(--ink)', color: '#fff', borderColor: 'var(--ink)' } : undefined}
+                  style={platforms.includes(value) ? { background: 'var(--solid)', color: 'var(--on-solid)', borderColor: 'var(--solid)' } : undefined}
                   onClick={() => setPlatforms(platforms.includes(value) ? platforms.filter((p) => p !== value) : [...platforms, value])}>{label}</button>
               ))}
             </div>

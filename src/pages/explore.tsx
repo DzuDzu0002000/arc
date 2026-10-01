@@ -94,10 +94,10 @@ export function CampaignDetail({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="card row" style={{ background: 'var(--accent-soft)', borderColor: '#bfe3dc' }}>
+      <div className="card row" style={{ background: 'var(--accent-soft)', borderColor: 'var(--tint-line)' }}>
         <span style={{ color: 'var(--accent)' }}>{Icons.lock}</span>
         <div style={{ flexGrow: 1 }}>
-          <div className="small" style={{ color: '#245e57' }}>{t('Đang khóa trong escrow')}</div>
+          <div className="small" style={{ color: 'var(--tint-ink)' }}>{t('Đang khóa trong escrow')}</div>
           <strong style={{ fontSize: 20 }}>{data.escrowBalance !== null ? `${usdc(data.escrowBalance)} USDC` : c.status === 'open' ? t('Đang đọc…') : t('Chưa nạp')}</strong>
         </div>
         {c.fundTx && <a href={txUrl(c.fundTx)} target="_blank" rel="noreferrer" className="small">{t('Giao dịch nạp')}</a>}

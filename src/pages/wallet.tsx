@@ -3,7 +3,7 @@ import { api, type MeData } from '../api'
 import { useSession } from '../App'
 import { clearLogin } from '../circle'
 import { t } from '../i18n'
-import { addressUrl, FAUCET_URL, LangSwitch, Link, localized, Loading, navigate, timeLeft, txUrl, usdc, useLoad } from '../ui'
+import { addressUrl, FAUCET_URL, Prefs, Link, localized, Loading, navigate, timeLeft, txUrl, usdc, useLoad } from '../ui'
 
 const demo = import.meta.env.DEV && import.meta.env.VITE_MOCK === '1'
 
@@ -113,7 +113,7 @@ export function Wallet() {
           <div className="small muted">{session.account.email} · {isProject ? t('Tài khoản dự án') : t('Tài khoản tester')}{session.isAdmin ? ' · Admin' : ''} · Circle Wallet</div>
         </div>
         <div className="row wrap">
-          <LangSwitch />
+          <Prefs />
           {demo && <button type="button" className="btn" onClick={switchRoleDemo}>{isProject ? t('Đổi sang tester (demo)') : t('Đổi sang dự án (demo)')}</button>}
           <button type="button" className="btn" onClick={signOut}>{t('Đăng xuất')}</button>
         </div>

@@ -56,7 +56,7 @@ export function MyBugs() {
           </Link>
         )}
       </div>
-      <div className="card row between wrap" style={{ background: 'var(--ink)', color: '#fff', borderColor: 'var(--ink)' }}>
+      <div className="card row between wrap" style={{ background: 'var(--final-bg)', color: '#fff', borderColor: 'var(--final-bg)' }}>
         <div><div className="small" style={{ color: '#b9bdc6' }}>{t('Đã nhận từ bug')}</div><strong style={{ fontFamily: 'var(--display)', fontSize: 30 }}>{usdc(String(earned))} USDC</strong></div>
         <div className="small" style={{ color: '#b9bdc6', textAlign: 'right' }}>{t('{n} bug đã gửi · {m} được chấp nhận', { n: data.bugs.length, m: accepted })}<br />{t('{n} chiến dịch đang tham gia', { n: approved.length })}</div>
       </div>

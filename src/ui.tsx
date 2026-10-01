@@ -194,7 +194,7 @@ export function AppNav({ path, role, isAdmin }: { path: string; role: Role; isAd
           {Icons.faucet}<span>Faucet</span>
         </a>
       </div>
-      <LangSwitch className="nav-lang" />
+      <Prefs className="nav-lang" />
     </nav>
   )
 }
@@ -214,4 +214,49 @@ export function LangSwitch({ className }: { className?: string }) {
       ))}
     </div>
   )
+}
+
+// ---- Light / dark theme ----
+// index.html sets html[data-theme] before first paint (saved choice, else the system setting).
+type Theme = 'light' | 'dark'
+const THEME_KEY = 'archunt.theme'
+
+function currentTheme(): Theme {
+  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
+}
+
+export function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>(currentTheme)
+  useEffect(() => {
+    // Follow the system while the viewer has not picked a theme.
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => {
+      let saved: string | null = null
+      try { saved = localStorage.getItem(THEME_KEY) } catch { /* storage blocked */ }
+      if (saved) return
+      document.documentElement.dataset.theme = media.matches ? 'dark' : 'light'
+      setTheme(currentTheme())
+    }
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [])
+  const next: Theme = theme === 'dark' ? 'light' : 'dark'
+  const toggle = () => {
+    document.documentElement.dataset.theme = next
+    try { localStorage.setItem(THEME_KEY, next) } catch { /* storage blocked */ }
+    setTheme(next)
+  }
+  const label = next === 'dark' ? t('Chuyển sang giao diện tối') : t('Chuyển sang giao diện sáng')
+  return (
+    <button type="button" className="theme-toggle" onClick={toggle} aria-label={label} title={label}>
+      {theme === 'dark'
+        ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+        : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>}
+    </button>
+  )
+}
+
+/** Theme toggle + VI | EN, shown together wherever the language switch appears. */
+export function Prefs({ className }: { className?: string }) {
+  return <div className={`prefs ${className ?? ''}`}><ThemeToggle /><LangSwitch /></div>
 }

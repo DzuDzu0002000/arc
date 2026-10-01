@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api, type Role } from '../api'
 import { useSession } from '../App'
 import { t } from '../i18n'
-import { BrandMark, Icons, LangSwitch, navigate } from '../ui'
+import { BrandMark, Icons, Prefs, navigate } from '../ui'
 
 const CHOICES: Array<{ role: Role; title: string; body: string; points: string[]; icon: typeof Icons.projects }> = [
   {
@@ -39,7 +39,7 @@ export function Welcome() {
 
   return (
     <main className="page" style={{ maxWidth: 760, paddingTop: 48 }}>
-      <div className="row between"><div className="brand"><BrandMark />ArcHunt</div><LangSwitch /></div>
+      <div className="row between"><div className="brand"><BrandMark />ArcHunt</div><Prefs /></div>
       <div className="stack">
         <h1>{t('Bạn tham gia ArcHunt với vai trò nào?')}</h1>
         <p className="muted" style={{ margin: 0 }}>{t('Mỗi tài khoản chọn một vai trò. Giao diện và quyền thao tác sẽ khác nhau theo vai trò bạn chọn.')}</p>

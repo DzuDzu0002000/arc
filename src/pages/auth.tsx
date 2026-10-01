@@ -3,13 +3,13 @@ import { post } from '../api'
 import { useSession } from '../App'
 import { confirmChallenge, loginWithEmail } from '../circle'
 import { t } from '../i18n'
-import { BrandMark, LangSwitch, Link, navigate } from '../ui'
+import { BrandMark, Prefs, Link, navigate } from '../ui'
 
 function Header() {
   return (
     <div className="row between">
       <Link to="/" className="brand"><BrandMark />ArcHunt</Link>
-      <LangSwitch />
+      <Prefs />
     </div>
   )
 }

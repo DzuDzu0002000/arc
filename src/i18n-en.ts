@@ -129,6 +129,8 @@ export const en: Record<string, string> = {
   // Circle wallet & signing
   'Không thấy email? Hãy xem mục Thư rác (Spam) hoặc Quảng cáo. Mã được gửi từ auth@archunt.site; bấm "Không phải thư rác" để lần sau email vào hộp thư chính.': 'No email? Check your Spam or Promotions folder. The code comes from auth@archunt.site; mark it "Not spam" so future emails reach your inbox.',
   'Hãy ghi nhớ mã PIN 6 số này. Bạn cần nó mỗi khi nạp hoặc trả USDC. ArcHunt không lưu và không khôi phục được mã PIN.': 'Remember this 6-digit PIN. You need it whenever you fund or pay out USDC. ArcHunt does not store your PIN and cannot recover it.',
+  'Chuyển sang giao diện tối': 'Switch to dark mode',
+  'Chuyển sang giao diện sáng': 'Switch to light mode',
   'Mã OTP không hợp lệ hoặc đã hết hạn.': 'The code is invalid or has expired.',
   'Thiếu VITE_CIRCLE_APP_ID.': 'VITE_CIRCLE_APP_ID is missing.',
   'Phiên ký đã hết hạn. Đăng nhập lại để xác nhận.': 'Your signing session expired. Sign in again to confirm.',

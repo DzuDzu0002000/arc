@@ -1,7 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useSession } from '../App'
 import { t } from '../i18n'
-import { BrandMark, Icons, LangSwitch, Link } from '../ui'
+import { BrandMark, Icons, Prefs, Link } from '../ui'
 import '../landing.css'
 
 const check = (
@@ -11,12 +11,62 @@ const arrow = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M13 6l6 6-6 6" /></svg>
 )
 
+// Cards and headings that fade up as they scroll into view; siblings are staggered.
+const REVEAL = '.lp-section-head, .lp-card, .lp-role, .lp-preview, .lp-step, .lp-rules > div, .lp-faq details, .lp-final-box'
+
+function useScrollEffects() {
+  useEffect(() => {
+    const root = document.documentElement
+    const header = document.querySelector<HTMLElement>('.lp-header')
+    let frame = 0
+    const onScroll = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const max = root.scrollHeight - root.clientHeight
+        root.style.setProperty('--lp-progress', String(max > 0 ? Math.min(window.scrollY / max, 1) : 0))
+        root.style.setProperty('--lp-scroll', String(window.scrollY))
+        header?.classList.toggle('scrolled', window.scrollY > 8)
+      })
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const targets = [...document.querySelectorAll<HTMLElement>(REVEAL)]
+    let observer: IntersectionObserver | null = null
+    if (!reduce && 'IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          entry.target.classList.add('in')
+          observer?.unobserve(entry.target)
+        }
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 })
+      for (const el of targets) {
+        const siblings = el.parentElement ? [...el.parentElement.children].filter((c) => c.matches(REVEAL)) : [el]
+        el.style.setProperty('--d', `${Math.min(siblings.indexOf(el), 5) * 90}ms`)
+        el.classList.add('reveal')
+        observer.observe(el)
+      }
+    }
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+      observer?.disconnect()
+      for (const el of targets) el.classList.remove('reveal', 'in')
+      root.style.removeProperty('--lp-progress')
+      root.style.removeProperty('--lp-scroll')
+    }
+  }, [])
+}
+
 function Header() {
   const { session } = useSession()
   const [open, setOpen] = useState(false)
   const signedIn = Boolean(session?.authenticated)
   return (
     <header className="lp-header">
+      <div className="lp-progress" aria-hidden="true" />
       <div className="lp-wrap lp-header-row">
         <Link to="/" className="brand"><BrandMark />ArcHunt</Link>
         <nav className="lp-nav" aria-label={t('Giới thiệu')}>
@@ -34,7 +84,7 @@ function Header() {
           <a href="#faq">{t('Hỏi đáp')}</a>
         </nav>
         <div className="row lp-actions">
-          <LangSwitch />
+          <Prefs />
           {signedIn ? (
             <Link to="/app" className="btn primary">{t('Mở ứng dụng')}</Link>
           ) : (
@@ -155,11 +205,13 @@ export function Landing() {
   const { session } = useSession()
   const signedIn = Boolean(session?.authenticated)
   const start = signedIn ? '/app' : '/auth'
+  useScrollEffects()
   return (
     <div className="lp">
       <Header />
 
       <section className="lp-hero">
+        <div className="lp-glow" aria-hidden="true" />
         <div className="lp-wrap lp-hero-grid">
           <div className="stack" style={{ gap: 24 }}>
             <span className="lp-pill"><i />{t('Xây dựng trên Arc · Ví bởi Circle')}</span>
