@@ -22,7 +22,7 @@ async function call(path: string, init: { method?: string; userToken?: string; b
     signal: AbortSignal.timeout(15_000),
   })
   const payload: unknown = await response.json().catch(() => null)
-  return { status: response.status, ok: response.ok, data: isRecord(payload) && isRecord(payload.data) ? payload.data : null, payload }
+  return { status: response.status, ok: response.ok, data: isRecord(payload) && isRecord(payload.data) ? payload.data : null, payload, withUserToken: Boolean(init.userToken) }
 }
 
 /** Circle rejects an expired user token (they last ~60 minutes) with 401/403: the user must sign in again to sign. */
@@ -30,9 +30,15 @@ function reauthIfExpired(status: number) {
   if (status === 401 || status === 403) throw new HttpError(401, 'Your Circle sign-in expired. Sign in again to confirm this action.', 'CIRCLE_REAUTH')
 }
 
-function circleError(result: { status: number; payload: unknown }, fallback: string): never {
+function circleError(result: { status: number; payload: unknown; withUserToken: boolean }, fallback: string): never {
+  const code = isRecord(result.payload) ? result.payload.code : undefined
+  const message = isRecord(result.payload) ? result.payload.message : undefined
+  console.error('ARCHUNT_CIRCLE_ERROR', result.status, code, message)
+  // Without a user token, 401/403 means Circle rejected our server API key, not that the user's sign-in expired.
+  if (!result.withUserToken && (result.status === 401 || result.status === 403)) {
+    throw new HttpError(500, 'The server could not authenticate with Circle. Check CIRCLE_API_KEY.', 'CIRCLE_API_KEY')
+  }
   reauthIfExpired(result.status)
-  console.error('ARCHUNT_CIRCLE_ERROR', result.status, isRecord(result.payload) ? result.payload.code : undefined)
   throw new HttpError(502, fallback)
 }
 

@@ -7,7 +7,8 @@ function required(name: string) {
 export class ConfigError extends Error {}
 
 export const env = {
-  circleApiKey: () => required('CIRCLE_API_KEY'),
+  // Trim stray spaces/quotes that often sneak in when pasting keys into a dashboard.
+  circleApiKey: () => required('CIRCLE_API_KEY').trim().replace(/^['"]|['"]$/g, ''),
   sessionSecret: () => {
     const secret = required('SESSION_SECRET')
     if (secret.length < 32) throw new ConfigError('SESSION_SECRET must be at least 32 characters')
