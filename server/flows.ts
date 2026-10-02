@@ -6,6 +6,7 @@ import { db, must, type BugRow, type CampaignRow, type PayoutRow } from './db.js
 import { env } from './env.js'
 import { receiptPaysBug, uuidToBytes32 } from './escrow.js'
 import { conflict, notFound } from './http.js'
+import { notifyBugChange } from './notify.js'
 import { dbAmountToUnits, formatUsdc } from './money.js'
 import { nextBugStatus, remainingBudget, testerProfile, type BugAction, type Severity, type TesterStatsRow } from './rules.js'
 
@@ -40,6 +41,7 @@ export async function transitionBug(bug: BugRow, act: BugAction, patch: Partial<
     .update({ ...patch, status: next, updated_at: new Date().toISOString() })
     .eq('id', bug.id).eq('status', bug.status).select('*')) as BugRow[]
   if (!rows.length) throw conflict('This bug was just updated by someone else. Refresh and try again.')
+  await notifyBugChange(rows[0], act)
   return rows[0]
 }
 

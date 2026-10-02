@@ -243,3 +243,46 @@ textarea.input { resize: vertical; }
 .google-btn { gap: 10px; }
 .legal ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; line-height: 1.6; color: var(--ink-2); }
 .legal p { margin: 0; line-height: 1.6; }
+
+/* ---- Notifications: bell at the top of the sidebar (top-left corner on phones), toasts bottom-left ---- */
+.notices { position: fixed; top: 12px; left: 12px; z-index: 40; }
+.notice-bell { position: relative; display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, .08); }
+.notice-bell:hover { border-color: var(--tint-line); }
+.notice-bell.has-unread { border-color: var(--accent); background: var(--accent-soft); }
+.notice-bell.has-unread svg { color: var(--accent); animation: notice-ring 2.4s ease-in-out infinite; transform-origin: 50% 10%; }
+.notice-label { display: none; }
+.notice-count { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--danger); color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+:root[data-theme="dark"] .notice-count { color: #1a0505; }
+.notice-panel { position: fixed; top: 64px; left: 12px; right: 12px; max-height: min(70vh, 560px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 24px 60px rgba(0, 0, 0, .18); overflow: hidden; }
+.notice-panel-head { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.notice-empty { margin: 0; padding: 20px 16px; }
+.notice-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; }
+.notice-item { width: 100%; display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 0; border-radius: 12px; background: transparent; text-align: left; cursor: pointer; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+.notice-item:hover { background: var(--ground); }
+.notice-item.unread { color: var(--ink); font-weight: 600; background: var(--accent-soft); }
+.notice-item span { display: flex; flex-direction: column; gap: 2px; }
+.notice-item small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.notice-item i, .toast i { flex-shrink: 0; width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; background: var(--info-ink); }
+.notice-item.good i, .toast.good i { background: var(--good-ink); }
+.notice-item.bad i, .toast.bad i { background: var(--danger); }
+.link-btn { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 600; font-size: 13px; cursor: pointer; }
+
+.toasts { position: fixed; left: 12px; bottom: 84px; z-index: 60; display: flex; flex-direction: column-reverse; gap: 10px; width: min(380px, calc(100vw - 24px)); pointer-events: none; }
+.toast { pointer-events: auto; display: flex; align-items: flex-start; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--info-ink); box-shadow: 0 18px 40px rgba(0, 0, 0, .18); animation: toast-in .35s cubic-bezier(.2, .7, .2, 1) both; }
+.toast.good { border-left-color: var(--good-ink); }
+.toast.bad { border-left-color: var(--danger); }
+.toast-body { flex: 1; display: flex; gap: 10px; align-items: flex-start; padding: 14px 4px 14px 14px; border: 0; background: none; text-align: left; font-weight: 600; font-size: 14px; line-height: 1.45; color: var(--ink); cursor: pointer; }
+.toast-close { width: 40px; height: 40px; border: 0; background: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+@keyframes toast-in { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+@keyframes notice-ring { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(14deg); } 85% { transform: rotate(-12deg); } 95% { transform: rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) { .toast, .notice-bell.has-unread svg { animation: none; } }
+@media (max-width: 899px) { .shell { padding-top: 56px; } }
+@media (min-width: 900px) {
+  .notices { position: relative; top: auto; left: auto; margin: -16px 0 -16px; }
+  .notice-bell { width: 100%; height: 52px; padding: 0 16px; gap: 14px; font-size: 16px; box-shadow: none; }
+  .notice-label { display: inline; flex: 1; text-align: left; }
+  .notice-panel { position: absolute; top: 0; left: calc(100% + 28px); right: auto; width: 400px; }
+  .toasts { bottom: 20px; left: 20px; }
+}
+.count-stats .good strong { color: var(--good-ink); }
+.count-stats .bad strong { color: var(--danger); }

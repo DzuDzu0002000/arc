@@ -13,6 +13,7 @@ import { Wallet } from './pages/wallet'
 import { Welcome } from './pages/welcome'
 import { BugDetail } from './pages/work'
 import { t } from './i18n'
+import { Notices } from './notices'
 import { AppNav, Link, Loading, navigate, usePath } from './ui'
 
 type SessionContext = { session: SessionInfo | null; refresh: () => Promise<void> }
@@ -104,7 +105,7 @@ export function App() {
     <Ctx.Provider value={{ session, refresh }}>
       <div className={showNav ? 'shell' : undefined}>
         {page}
-        {showNav && <AppNav path={path} role={role} isAdmin={session.isAdmin} />}
+        {showNav && <AppNav path={path} role={role} isAdmin={session.isAdmin} notices={<Notices />} />}
       </div>
     </Ctx.Provider>
   )

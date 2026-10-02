@@ -217,7 +217,28 @@ function me() {
   return { role: null, wallet }
 }
 
+// Demo notifications, different per side. Marking read only lasts until the page reloads.
+const readNotices = new Set<string>()
+function notices() {
+  const pf = find(campaigns, PROMPTFORGE_ID) as Campaign
+  const camp = { title: pf.title, title_en: null, product_name: pf.productName }
+  const list = role === 'project'
+    ? [
+        { id: 'n1', kind: 'bug_submitted', campaign_id: pf.id, bug_id: '3e4f5a6b-7c8d-4e9f-8a0b-2c3d4e5f6a7b', created_at: iso(-hour), campaigns: camp, bugs: { title: 'Prompt tiếng Việt có dấu bị lỗi mã hoá trong metadata' } },
+        { id: 'n2', kind: 'application_new', campaign_id: pf.id, bug_id: null, created_at: iso(-5 * hour), campaigns: camp, bugs: null },
+        { id: 'n3', kind: 'dispute_opened', campaign_id: pf.id, bug_id: '2d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f6a', created_at: iso(-day), campaigns: camp, bugs: { title: '/upscale trả 500 khi ảnh đầu vào là PNG trong suốt' } },
+      ]
+    : [
+        { id: 't1', kind: 'application_approved', campaign_id: pf.id, bug_id: null, created_at: iso(-2 * hour), campaigns: camp, bugs: null },
+        { id: 't2', kind: 'bug_rejected', campaign_id: pf.id, bug_id: null, created_at: iso(-6 * hour), campaigns: camp, bugs: { title: 'Nút xuất PDF không phản hồi trên Safari' } },
+        { id: 't3', kind: 'bug_paid', campaign_id: pf.id, bug_id: null, created_at: iso(-2 * day), campaigns: camp, bugs: { title: 'Ảnh 4K bị crop mất viền phải' } },
+      ]
+  const notifications = list.map((n) => ({ ...n, read_at: readNotices.has(n.id) || n.created_at < iso(-day + hour) ? iso(-hour) : null }))
+  return { notifications, unread: notifications.filter((n) => !n.read_at).length }
+}
+
 function get(path: string, params: URLSearchParams) {
+  if (path === '/api/notifications') return notices()
   if (path === '/api/auth/session') return { authenticated: true, account: { ...ME, role, circleUserId: '3f9c1a52-7e4b-4d2a-9b61-0c8e5d7a2f14' }, wallet: { address: WALLET }, isAdmin: true }
   if (path === '/api/me') return me()
   if (path === '/api/campaigns' && !params.get('id')) {
@@ -274,6 +295,11 @@ function post(path: string, body: Record<string, unknown>) {
   const campaign = find(campaigns, body.id) ?? find(campaigns, body.campaignId)
   const payFor = (target: Bug, severity: unknown) => payoutsOf(campaignOf(target))[String(severity)] ?? '0'
   switch (`${path}:${body.action}`) {
+    case '/api/notifications:read': {
+      const all = notices().notifications
+      for (const n of all) if (!Array.isArray(body.ids) || body.ids.includes(n.id)) readNotices.add(n.id)
+      return { unread: notices().unread }
+    }
     case '/api/applications:apply':
       applications.push({ id: `app-${Date.now()}`, campaignId: String(body.campaignId), tester: ME.id, testerName: ME.displayName, status: 'pending', message: String(body.message), devices: String(body.devices), createdAt: iso(0) })
       return { status: 'pending' }

@@ -106,6 +106,18 @@ export function timeLeft(iso: string | null) {
   return t('còn {n} phút', { n: Math.max(1, Math.floor(ms / 60_000)) })
 }
 
+/** "5 phút trước" style relative time for notifications. */
+export function timeAgo(iso: string) {
+  const ms = Date.now() - new Date(iso).getTime()
+  const minutes = Math.floor(ms / 60_000)
+  if (minutes < 1) return t('vừa xong')
+  if (minutes < 60) return t('{n} phút trước', { n: minutes })
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return t('{n} giờ trước', { n: hours })
+  const days = Math.floor(hours / 24)
+  return days < 7 ? t('{n} ngày trước', { n: days }) : dateTime(iso)
+}
+
 export function dateTime(iso: string) {
   return new Date(iso).toLocaleString(locale(), { dateStyle: 'medium', timeStyle: 'short' })
 }
@@ -176,7 +188,7 @@ const NAV: Record<Role, Array<[string, string, ReactNode]>> = {
 }
 
 /** Vertical sidebar on wide screens, bottom tab bar on phones (switched by CSS). Items depend on the account's role. */
-export function AppNav({ path, role, isAdmin }: { path: string; role: Role; isAdmin: boolean }) {
+export function AppNav({ path, role, isAdmin, notices }: { path: string; role: Role; isAdmin: boolean; notices?: ReactNode }) {
   const items = [...NAV[role]]
   if (isAdmin) items.push(['/app/admin', 'Admin', Icons.admin])
   const current = section(path, role)
@@ -184,6 +196,7 @@ export function AppNav({ path, role, isAdmin }: { path: string; role: Role; isAd
     <nav className="nav" aria-label={t('Điều hướng chính')}>
       <Link to="/app" className="brand nav-brand"><BrandMark />ArcHunt</Link>
       <span className="nav-role">{role === 'project' ? t('Không gian dự án') : t('Không gian tester')}</span>
+      {notices}
       <div className="nav-inner">
         {items.map(([to, label, glyph]) => (
           <Link key={to} to={to} className={to === '/app/admin' ? 'nav-extra' : undefined} aria-current={current === to ? 'page' : undefined}>

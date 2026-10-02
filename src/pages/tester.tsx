@@ -31,6 +31,38 @@ function BugCard({ bug }: { bug: TesterBug }) {
   )
 }
 
+/** How many campaigns the tester applied to and how they were decided; same for bugs. */
+function TesterCounts({ applications, bugs }: { applications: TesterMe['applications']; bugs: TesterBug[] }) {
+  const apps = (statuses: string[]) => applications.filter((a) => statuses.includes(a.status)).length
+  const bugCount = (statuses: BugStatus[]) => bugs.filter((b) => statuses.includes(b.status)).length
+  const groups: Array<[string, Array<[string, number, string?]>]> = [
+    [t('Ứng tuyển'), [
+      [t('Đã ứng tuyển'), applications.length],
+      [t('Được duyệt'), apps(['approved']), 'good'],
+      [t('Bị từ chối'), apps(['rejected', 'removed']), 'bad'],
+      [t('Đang chờ'), apps(['pending'])],
+    ]],
+    [t('Bug'), [
+      [t('Đã gửi'), bugs.length],
+      [t('Được chấp nhận'), bugCount(['accepted', 'paid']), 'good'],
+      [t('Bị từ chối'), bugCount(['rejected', 'disputed', 'rejected_final']), 'bad'],
+      [t('Đang chờ xét'), bugCount(['submitted', 'needs_info'])],
+    ]],
+  ]
+  return (
+    <div className="grid2">
+      {groups.map(([title, cells]) => (
+        <section key={title} className="card stack" aria-label={title}>
+          <strong>{title}</strong>
+          <div className="tester-stats count-stats">
+            {cells.map(([label, value, tone]) => <div key={label} className={tone}><strong>{value}</strong><span>{label}</span></div>)}
+          </div>
+        </section>
+      ))}
+    </div>
+  )
+}
+
 /** Tester: every bug they reported, filterable by where it stands. */
 export function MyBugs() {
   const { session } = useSession()
@@ -60,6 +92,8 @@ export function MyBugs() {
         <div><div className="small" style={{ color: '#b9bdc6' }}>{t('Đã nhận từ bug')}</div><strong style={{ fontFamily: 'var(--display)', fontSize: 30 }}>{usdc(String(earned))} USDC</strong></div>
         <div className="small" style={{ color: '#b9bdc6', textAlign: 'right' }}>{t('{n} bug đã gửi · {m} được chấp nhận', { n: data.bugs.length, m: accepted })}<br />{t('{n} chiến dịch đang tham gia', { n: approved.length })}</div>
       </div>
+
+      <TesterCounts applications={data.applications} bugs={data.bugs} />
 
       {approved.length > 0 && (
         <div className="row wrap small">

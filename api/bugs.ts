@@ -10,6 +10,7 @@ import {
   disputeDueAt, disputeError, minPayoutUnits, rejectError, remainingBudget, responseDueAt, SEVERITIES, submitBugError,
   validateBugInput, validateRating, type Severity,
 } from '../server/rules.js'
+import { notify } from '../server/notify.js'
 import { requireSession, type Session } from '../server/session.js'
 
 const messageBody = (value: unknown) => {
@@ -91,6 +92,7 @@ async function submit(session: Session, input: Record<string, unknown>) {
     actual: v.actual, environment: v.environment, evidence_urls: v.evidenceUrls, severity_claimed: v.severity,
     response_due_at: responseDueAt(new Date(), campaign.response_hours).toISOString(),
   }).select('id').single<{ id: string }>())
+  if (row) await notify([campaign.owner_account_id], 'bug_submitted', { campaignId: campaign.id, bugId: row.id })
   return row
 }
 
