@@ -56,8 +56,10 @@ export type CampaignInput = {
   description: string
   scopeIn: string
   scopeOut: string
+  /** Tasks shown only to approved testers and the owner. */
+  brief: string | null
   /** Optional English copy; null when the project did not provide it. */
-  english: { title: string | null; description: string | null; scopeIn: string | null; scopeOut: string | null }
+  english: { title: string | null; description: string | null; scopeIn: string | null; scopeOut: string | null; brief: string | null }
   testUrl: string | null
   platforms: Platform[]
   testerSlots: number
@@ -73,14 +75,16 @@ export function validateCampaignInput(input: unknown, now: Date): Result<Campaig
 
   const title = text(body.title, 'Title', 5, 120); if (!title.ok) return title
   const productName = text(body.productName, 'Product name', 1, 80); if (!productName.ok) return productName
-  const description = text(body.description ?? '', 'Description', 0, 5000); if (!description.ok) return description
-  const scopeIn = text(body.scopeIn ?? '', 'In scope', 0, 3000); if (!scopeIn.ok) return scopeIn
+  const description = text(body.description ?? '', 'Description', 20, 5000); if (!description.ok) return description
+  const scopeIn = text(body.scopeIn ?? '', 'In scope', 10, 3000); if (!scopeIn.ok) return scopeIn
   const scopeOut = text(body.scopeOut ?? '', 'Out of scope', 0, 3000); if (!scopeOut.ok) return scopeOut
   const titleEn = text(body.titleEn ?? '', 'English title', 0, 120); if (!titleEn.ok) return titleEn
   if (titleEn.value && titleEn.value.length < 5) return fail('English title must be at least 5 characters.')
   const descriptionEn = text(body.descriptionEn ?? '', 'English description', 0, 5000); if (!descriptionEn.ok) return descriptionEn
   const scopeInEn = text(body.scopeInEn ?? '', 'English in scope', 0, 3000); if (!scopeInEn.ok) return scopeInEn
   const scopeOutEn = text(body.scopeOutEn ?? '', 'English out of scope', 0, 3000); if (!scopeOutEn.ok) return scopeOutEn
+  const brief = text(body.brief ?? '', 'Tester tasks', 0, 5000); if (!brief.ok) return brief
+  const briefEn = text(body.briefEn ?? '', 'English tester tasks', 0, 5000); if (!briefEn.ok) return briefEn
 
   const rawUrl = typeof body.testUrl === 'string' ? body.testUrl.trim() : ''
   if (rawUrl && !httpsUrl(rawUrl)) return fail('Test URL must start with https://')
@@ -120,8 +124,8 @@ export function validateCampaignInput(input: unknown, now: Date): Result<Campaig
     ok: true,
     value: {
       title: title.value, productName: productName.value, description: description.value,
-      scopeIn: scopeIn.value, scopeOut: scopeOut.value, testUrl: rawUrl || null,
-      english: { title: titleEn.value || null, description: descriptionEn.value || null, scopeIn: scopeInEn.value || null, scopeOut: scopeOutEn.value || null },
+      scopeIn: scopeIn.value, scopeOut: scopeOut.value, testUrl: rawUrl || null, brief: brief.value || null,
+      english: { title: titleEn.value || null, description: descriptionEn.value || null, scopeIn: scopeInEn.value || null, scopeOut: scopeOutEn.value || null, brief: briefEn.value || null },
       platforms: platforms as Platform[], testerSlots, budget: String(body.budget), payouts,
       endsAt: endsAt.toISOString(), responseHours,
     },

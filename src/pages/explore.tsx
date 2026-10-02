@@ -94,6 +94,16 @@ export function CampaignDetail({ id }: { id: string }) {
         </div>
       </div>
 
+      <section className="card where-to-test">
+        <div className="stack" style={{ gap: 4, flex: 1, minWidth: 0 }}>
+          <div className="label">{t('Nơi test')}</div>
+          {c.testUrl
+            ? <a href={c.testUrl} target="_blank" rel="noreferrer" className="test-url">{c.testUrl}</a>
+            : <span className="small muted">{t('Dự án chưa cung cấp link. Xem hướng dẫn trong phần Phạm vi test bên dưới.')}</span>}
+        </div>
+        {c.testUrl && <a href={c.testUrl} target="_blank" rel="noreferrer" className="btn primary">{t('Mở sản phẩm cần test')} ↗</a>}
+      </section>
+
       <div className="card row" style={{ background: 'var(--accent-soft)', borderColor: 'var(--tint-line)' }}>
         <span style={{ color: 'var(--accent)' }}>{Icons.lock}</span>
         <div style={{ flexGrow: 1 }}>
@@ -111,13 +121,14 @@ export function CampaignDetail({ id }: { id: string }) {
         <p className="small muted" style={{ margin: 0 }}>{t('Còn {amount} USDC chưa được dùng cho bug nào.', { amount: usdc(data.remainingBudget) })}</p>
       </section>
 
-      {(c.description || c.scopeIn || c.scopeOut) && (
+      {(c.description || c.scopeIn || c.scopeOut) ? (
         <section className="card stack">
           {c.description && <><div className="label">{t('Giới thiệu')}</div><div className="pre">{localized(c.description, c.english.description)}</div></>}
           {c.scopeIn && <><div className="label">{t('Phạm vi test')}</div><div className="pre">{localized(c.scopeIn, c.english.scopeIn)}</div></>}
           {c.scopeOut && <><div className="label">{t('Ngoài phạm vi')}</div><div className="pre">{localized(c.scopeOut, c.english.scopeOut)}</div></>}
-          {c.testUrl && <a href={c.testUrl} target="_blank" rel="noreferrer">{t('Mở sản phẩm cần test')}</a>}
         </section>
+      ) : (
+        <div className="alert warn">{t('Dự án chưa mô tả sản phẩm và phạm vi test. Hãy test các luồng chính trên link ở trên và ghi rõ các bước khi báo bug.')}</div>
       )}
 
       <section className="card row between" style={{ textAlign: 'center' }}>
@@ -125,6 +136,18 @@ export function CampaignDetail({ id }: { id: string }) {
         <div style={{ flex: 1 }}><strong style={{ fontSize: 20 }}>{stats?.avgResponseDays != null ? t('{n} ngày', { n: stats.avgResponseDays.toFixed(1) }) : '—'}</strong><div className="small muted">{t('Phản hồi trung bình')}</div></div>
         <div style={{ flex: 1 }}><strong style={{ fontSize: 20 }}>{stats?.timedOut ?? 0}</strong><div className="small muted">{t('Quá hạn')}</div></div>
       </section>
+
+      {data.brief ? (
+        <section className="card stack brief-card">
+          <div className="row between wrap">
+            <div className="label">{t('Nhiệm vụ test')}</div>
+            <span className="pill st-good">{viewer.role === 'owner' ? t('Chỉ tester được duyệt thấy') : t('Dành cho bạn')}</span>
+          </div>
+          <div className="pre">{localized(data.brief.text, data.brief.english)}</div>
+        </section>
+      ) : data.hasBrief && viewer.role !== 'owner' ? (
+        <div className="card row brief-locked">{Icons.lock}<span className="small">{t('Dự án có danh sách nhiệm vụ test chi tiết. Bạn sẽ thấy khi được duyệt.')}</span></div>
+      ) : null}
 
       {actionError && <div className="alert error" role="alert">{actionError}</div>}
 

@@ -11,6 +11,8 @@ const inDays = (days: number) => new Date(now.getTime() + days * 86_400_000).toI
 const campaignInput = {
   title: 'Test the multilingual chat flow',
   productName: 'Lumen Chat',
+  description: 'An AI support chatbot for an online store.',
+  scopeIn: 'Sign-in and multilingual answers',
   platforms: ['web', 'ios'],
   testerSlots: 10,
   budget: '1200',
@@ -44,6 +46,8 @@ test('rejects campaigns that would mislead testers', () => {
     [{ platforms: ['tv'] }, /valid platform/],
     [{ testUrl: 'http://insecure.example' }, /https/],
     [{ testerSlots: 0 }, /Tester slots/],
+    [{ description: '' }, /Description/],
+    [{ scopeIn: 'login' }, /In scope/],
   ]
   for (const [override, message] of cases) {
     const result = validateCampaignInput({ ...campaignInput, ...override }, now)

@@ -66,15 +66,15 @@ export async function translateViToEn(text: string | null | undefined): Promise<
   }
 }
 
-export type CampaignText = { title: string; description: string; scopeIn: string; scopeOut: string | null }
-export type EnglishText = { title: string | null; description: string | null; scopeIn: string | null; scopeOut: string | null }
+export type CampaignText = { title: string; description: string; scopeIn: string; scopeOut: string | null; brief: string | null }
+export type EnglishText = { title: string | null; description: string | null; scopeIn: string | null; scopeOut: string | null; brief: string | null }
 
 /**
  * Fills English fields the project left empty with a machine translation of the Vietnamese original.
  * When editing, a field is re-translated if its original changed but its English copy was left as it was.
  */
 export async function withEnglish(text: CampaignText, english: EnglishText, before?: { text: CampaignText; english: EnglishText }): Promise<EnglishText> {
-  const keys = ['title', 'description', 'scopeIn', 'scopeOut'] as const
+  const keys = ['title', 'description', 'scopeIn', 'scopeOut', 'brief'] as const
   const out = { ...english }
   await Promise.all(keys.map(async (key) => {
     const stale = before && before.text[key] !== text[key] && english[key] === before.english[key]

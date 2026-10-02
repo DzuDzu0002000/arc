@@ -42,8 +42,8 @@ function defaultEnd() {
 
 export function NewCampaign() {
   const [form, setForm] = useState({
-    title: '', productName: '', description: '', scopeIn: '', scopeOut: '', testUrl: '',
-    titleEn: '', descriptionEn: '', scopeInEn: '', scopeOutEn: '',
+    title: '', productName: '', description: '', scopeIn: '', scopeOut: '', testUrl: '', brief: '',
+    titleEn: '', descriptionEn: '', scopeInEn: '', scopeOutEn: '', briefEn: '',
     testerSlots: '10', budget: '', endDate: defaultEnd(), responseDays: '5',
   })
   const [platforms, setPlatforms] = useState<string[]>(['web'])
@@ -59,8 +59,8 @@ export function NewCampaign() {
     try {
       const result = await post<{ id: string }>('/api/campaigns', {
         action: 'create', title: form.title, productName: form.productName, description: form.description,
-        scopeIn: form.scopeIn, scopeOut: form.scopeOut, testUrl: form.testUrl, platforms,
-        titleEn: form.titleEn, descriptionEn: form.descriptionEn, scopeInEn: form.scopeInEn, scopeOutEn: form.scopeOutEn,
+        scopeIn: form.scopeIn, scopeOut: form.scopeOut, testUrl: form.testUrl, brief: form.brief, platforms,
+        titleEn: form.titleEn, descriptionEn: form.descriptionEn, scopeInEn: form.scopeInEn, scopeOutEn: form.scopeOutEn, briefEn: form.briefEn,
         testerSlots: Number(form.testerSlots), budget: form.budget,
         payouts: Object.fromEntries(Object.entries(payouts).filter(([, v]) => v.trim())),
         endsAt: new Date(`${form.endDate}T23:59:00`).toISOString(), responseHours: Number(form.responseDays) * 24,
@@ -81,10 +81,11 @@ export function NewCampaign() {
           <div className="label">{t('1 · Thông tin')}</div>
           <label className="field"><span>{t('Tên sản phẩm')}</span><input className="input" required maxLength={80} value={form.productName} onChange={set('productName')} /></label>
           <label className="field"><span>{t('Tiêu đề chiến dịch')}</span><input className="input" required minLength={5} maxLength={120} value={form.title} onChange={set('title')} placeholder={t('Test luồng đăng nhập và trả lời đa ngôn ngữ')} /></label>
-          <label className="field"><span>{t('Giới thiệu')}</span><textarea className="input" rows={3} maxLength={5000} value={form.description} onChange={set('description')} /></label>
-          <label className="field"><span>{t('Phạm vi test')}</span><textarea className="input" rows={3} maxLength={3000} value={form.scopeIn} onChange={set('scopeIn')} /></label>
+          <label className="field"><span>{t('Giới thiệu')} *</span><textarea className="input" rows={3} required minLength={20} maxLength={5000} value={form.description} onChange={set('description')} placeholder={t('Sản phẩm làm gì, dành cho ai, tester cần chuẩn bị gì (tài khoản test, ví, thiết bị…)')} /></label>
+          <label className="field"><span>{t('Phạm vi test')} *</span><textarea className="input" rows={3} required minLength={10} maxLength={3000} value={form.scopeIn} onChange={set('scopeIn')} placeholder={t('Mỗi dòng một tính năng hoặc luồng cần test')} /></label>
           <label className="field"><span>{t('Ngoài phạm vi')}</span><textarea className="input" rows={2} maxLength={3000} value={form.scopeOut} onChange={set('scopeOut')} /></label>
-          <label className="field"><span>{t('Link sản phẩm (https)')}</span><input className="input" type="url" value={form.testUrl} onChange={set('testUrl')} /></label>
+          <label className="field"><span>{t('Link sản phẩm (https)')}</span><input className="input" type="url" value={form.testUrl} onChange={set('testUrl')} placeholder="https://" /><small className="muted">{t('Nơi tester vào test: trang web, TestFlight, Google Play, link tải APK hoặc tài liệu API.')}</small></label>
+          <label className="field"><span>{t('Nhiệm vụ test (chỉ tester được duyệt thấy)')}</span><textarea className="input" rows={4} maxLength={5000} value={form.brief} onChange={set('brief')} placeholder={t('Các function cần test, tài khoản test, các bước chuẩn bị… Mỗi dòng một việc.')} /></label>
           <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
             <legend style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('Nền tảng')}</legend>
             <div className="row wrap" style={{ gap: 8 }}>
@@ -103,6 +104,7 @@ export function NewCampaign() {
           <div className="stack" style={{ gap: 14, marginTop: 12 }}>
             <label className="field"><span>{t('Tiêu đề (tiếng Anh)')}</span><input className="input" maxLength={120} value={form.titleEn} onChange={set('titleEn')} placeholder="Test sign-in and multilingual answers" /></label>
             <label className="field"><span>{t('Giới thiệu (tiếng Anh)')}</span><textarea className="input" rows={3} maxLength={5000} value={form.descriptionEn} onChange={set('descriptionEn')} /></label>
+            <label className="field"><span>{t('Nhiệm vụ test (tiếng Anh)')}</span><textarea className="input" rows={3} maxLength={5000} value={form.briefEn} onChange={set('briefEn')} /></label>
             <label className="field"><span>{t('Phạm vi test (tiếng Anh)')}</span><textarea className="input" rows={3} maxLength={3000} value={form.scopeInEn} onChange={set('scopeInEn')} /></label>
             <label className="field"><span>{t('Ngoài phạm vi (tiếng Anh)')}</span><textarea className="input" rows={2} maxLength={3000} value={form.scopeOutEn} onChange={set('scopeOutEn')} /></label>
           </div>

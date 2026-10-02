@@ -84,6 +84,11 @@ async function detail(id: string, session: Session | null) {
       overturned: Number(s.overturned), avgResponseDays: s.avg_response_days === null ? null : Number(s.avg_response_days),
     } : null,
     viewer: { role: isOwner ? 'owner' : session ? 'user' : 'guest', application: must(application) },
+    // Tester tasks stay private until the tester is approved.
+    hasBrief: Boolean(campaign.tester_brief),
+    brief: campaign.tester_brief && (isOwner || must(application)?.status === 'approved')
+      ? { text: campaign.tester_brief, english: campaign.tester_brief_en }
+      : null,
   }
 }
 
@@ -114,6 +119,7 @@ async function create(session: Session & { wallet: { address: string } }, input:
   must(await db().from('campaigns').insert({
     id, owner_account_id: session.account.id, title: v.title, product_name: v.productName, description: v.description,
     scope_in: v.scopeIn, scope_out: v.scopeOut, title_en: v.english.title, description_en: v.english.description, scope_in_en: v.english.scopeIn, scope_out_en: v.english.scopeOut,
+    tester_brief: v.brief, tester_brief_en: v.english.brief,
     test_url: v.testUrl, platforms: v.platforms, tester_slots: v.testerSlots,
     budget: v.budget, ends_at: v.endsAt, response_hours: v.responseHours, escrow_id: uuidToBytes32(id),
   }))
@@ -174,12 +180,13 @@ async function update(session: Session, id: string, input: Record<string, unknow
   if (!result.ok) throw badRequest(result.error)
   const v = result.value
   v.english = await withEnglish(v, v.english, {
-    text: { title: campaign.title, description: campaign.description, scopeIn: campaign.scope_in, scopeOut: campaign.scope_out },
-    english: { title: campaign.title_en, description: campaign.description_en, scopeIn: campaign.scope_in_en, scopeOut: campaign.scope_out_en },
+    text: { title: campaign.title, description: campaign.description, scopeIn: campaign.scope_in, scopeOut: campaign.scope_out, brief: campaign.tester_brief },
+    english: { title: campaign.title_en, description: campaign.description_en, scopeIn: campaign.scope_in_en, scopeOut: campaign.scope_out_en, brief: campaign.tester_brief_en },
   })
   must(await db().from('campaigns').update({
     title: v.title, product_name: v.productName, description: v.description, scope_in: v.scopeIn, scope_out: v.scopeOut,
     title_en: v.english.title, description_en: v.english.description, scope_in_en: v.english.scopeIn, scope_out_en: v.english.scopeOut,
+    tester_brief: v.brief, tester_brief_en: v.english.brief,
     test_url: v.testUrl, platforms: v.platforms, tester_slots: v.testerSlots, budget: v.budget, ends_at: v.endsAt,
     response_hours: v.responseHours, updated_at: new Date().toISOString(),
   }).eq('id', id).eq('status', 'draft'))

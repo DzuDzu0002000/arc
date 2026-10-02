@@ -237,6 +237,9 @@ function notices() {
   return { notifications, unread: notifications.filter((n) => !n.read_at).length }
 }
 
+const DEMO_BRIEF = '1. Đăng nhập bằng tài khoản test: tester@demo.app / Demo1234\n2. Test chức năng đổi ngôn ngữ trả lời (Việt, Anh, Nhật)\n3. Test xuất lịch sử hội thoại ra PDF và CSV\n4. Thử câu hỏi dài hơn 2.000 ký tự'
+const DEMO_BRIEF_EN = '1. Sign in with the test account: tester@demo.app / Demo1234\n2. Test switching the answer language (Vietnamese, English, Japanese)\n3. Test exporting chat history to PDF and CSV\n4. Try a question longer than 2,000 characters'
+
 function get(path: string, params: URLSearchParams) {
   if (path === '/api/notifications') return notices()
   if (path === '/api/auth/session') return { authenticated: true, account: { ...ME, role, circleUserId: '3f9c1a52-7e4b-4d2a-9b61-0c8e5d7a2f14' }, wallet: { address: WALLET }, isAdmin: true }
@@ -262,6 +265,10 @@ function get(path: string, params: URLSearchParams) {
       remainingBudget: String(Number(c.budget) - committed(c)), escrowBalance: c.fundTx ? String(Number(c.budget) - paidOut(c)) : null,
       approvedTesters: approvedCount(c), stats: { decided: 25, accepted: 17, timedOut: 0, overturned: 1, avgResponseDays: 1.8 },
       viewer: { role: c.owner === ME.id && role === 'project' ? 'owner' : 'user', application: role === 'tester' && application ? { id: application.id, status: application.status } : null },
+      hasBrief: true,
+      brief: (c.owner === ME.id && role === 'project') || (role === 'tester' && application?.status === 'approved')
+        ? { text: DEMO_BRIEF, english: DEMO_BRIEF_EN }
+        : null,
     }
   }
   if (path === '/api/bugs') {

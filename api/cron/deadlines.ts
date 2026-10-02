@@ -64,13 +64,13 @@ export default route(['GET'], async (req) => {
 
   // 5. Machine-translate campaigns still missing English (created before auto-translation, or the service was down).
   const untranslated = must(await db().from('campaigns').select('*')
-    .or('title_en.is.null,description_en.is.null,scope_in_en.is.null').order('created_at', { ascending: false }).limit(20)) as CampaignRow[]
+    .or('title_en.is.null,description_en.is.null,scope_in_en.is.null,and(tester_brief.not.is.null,tester_brief_en.is.null)').order('created_at', { ascending: false }).limit(20)) as CampaignRow[]
   for (const c of untranslated) {
-    const english = { title: c.title_en, description: c.description_en, scopeIn: c.scope_in_en, scopeOut: c.scope_out_en }
-    const filled = await withEnglish({ title: c.title, description: c.description, scopeIn: c.scope_in, scopeOut: c.scope_out }, english)
+    const english = { title: c.title_en, description: c.description_en, scopeIn: c.scope_in_en, scopeOut: c.scope_out_en, brief: c.tester_brief_en }
+    const filled = await withEnglish({ title: c.title, description: c.description, scopeIn: c.scope_in, scopeOut: c.scope_out, brief: c.tester_brief }, english)
     if (JSON.stringify(filled) === JSON.stringify(english)) continue
     must(await db().from('campaigns').update({
-      title_en: filled.title, description_en: filled.description, scope_in_en: filled.scopeIn, scope_out_en: filled.scopeOut,
+      title_en: filled.title, description_en: filled.description, scope_in_en: filled.scopeIn, scope_out_en: filled.scopeOut, tester_brief_en: filled.brief,
     }).eq('id', c.id))
     report.translated++
   }

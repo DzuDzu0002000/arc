@@ -43,6 +43,9 @@ export type CampaignListItem = Campaign & { maxPayout: string; approvedTesters: 
 
 export type CampaignDetail = {
   campaign: Campaign
+  /** Tester tasks: only sent to the owner and approved testers. */
+  brief: { text: string; english: string | null } | null
+  hasBrief: boolean
   ownerName: string
   payouts: Partial<Record<Severity, string>>
   remainingBudget: string

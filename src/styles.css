@@ -286,3 +286,7 @@ textarea.input { resize: vertical; }
 }
 .count-stats .good strong { color: var(--good-ink); }
 .count-stats .bad strong { color: var(--danger); }
+.where-to-test { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border-color: var(--accent); }
+.test-url { font-weight: 600; word-break: break-all; }
+.brief-card { border-color: var(--accent); background: var(--accent-soft); }
+.brief-locked { gap: 12px; color: var(--muted); border-style: dashed; }
