@@ -313,7 +313,7 @@ export const en: Record<string, string> = {
   'Loại khỏi chiến dịch': 'Remove from campaign',
 
   'Bản tiếng Anh (không bắt buộc)': 'English version (optional)',
-  'Người xem chọn English sẽ thấy nội dung này. Bỏ trống thì hiện bản gốc.': 'Viewers who pick English see this text. Leave empty to show the original.',
+  'Người xem chọn English sẽ thấy nội dung này. Bỏ trống thì ArcHunt tự dịch bằng máy; bạn có thể sửa lại bản dịch sau.': 'Viewers who pick English see this text. Leave it empty and ArcHunt machine-translates it; you can edit the translation later.',
   'Tiêu đề (tiếng Anh)': 'Title (English)',
   'Giới thiệu (tiếng Anh)': 'About (English)',
   'Phạm vi test (tiếng Anh)': 'In scope (English)',

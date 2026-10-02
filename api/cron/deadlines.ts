@@ -4,6 +4,7 @@ import { env } from '../../server/env.js'
 import { acceptBug, loadCampaign, payWithArbiter, transitionBug } from '../../server/flows.js'
 import { route, unauthorized } from '../../server/http.js'
 import { OWNER_SIGN_TIMEOUT_HOURS } from '../../server/rules.js'
+import { withEnglish } from '../../server/translate.js'
 
 // Each arbiter payout waits for its receipt, so cap the work per run; the next hourly run picks up the rest.
 const MAX_PAYOUTS_PER_RUN = 15
@@ -17,7 +18,7 @@ function authorized(header: string | undefined) {
 export default route(['GET'], async (req) => {
   if (!authorized(req.headers.authorization)) throw unauthorized('Invalid cron secret.')
   const now = new Date().toISOString()
-  const report = { autoAccepted: 0, paid: 0, finalizedRejections: 0, closedCampaigns: 0, errors: 0 }
+  const report = { autoAccepted: 0, paid: 0, finalizedRejections: 0, closedCampaigns: 0, translated: 0, errors: 0 }
   const campaigns = new Map<string, CampaignRow>()
   const campaignFor = async (id: string) => {
     if (!campaigns.has(id)) campaigns.set(id, await loadCampaign(id))
@@ -60,6 +61,19 @@ export default route(['GET'], async (req) => {
   const closed = must(await db().from('campaigns').update({ status: 'closed', closed_at: now })
     .eq('status', 'open').lt('ends_at', now).select('id')) as { id: string }[]
   report.closedCampaigns = closed.length
+
+  // 5. Machine-translate campaigns still missing English (created before auto-translation, or the service was down).
+  const untranslated = must(await db().from('campaigns').select('*')
+    .or('title_en.is.null,description_en.is.null,scope_in_en.is.null').order('created_at', { ascending: false }).limit(20)) as CampaignRow[]
+  for (const c of untranslated) {
+    const english = { title: c.title_en, description: c.description_en, scopeIn: c.scope_in_en, scopeOut: c.scope_out_en }
+    const filled = await withEnglish({ title: c.title, description: c.description, scopeIn: c.scope_in, scopeOut: c.scope_out }, english)
+    if (JSON.stringify(filled) === JSON.stringify(english)) continue
+    must(await db().from('campaigns').update({
+      title_en: filled.title, description_en: filled.description, scope_in_en: filled.scopeIn, scope_out_en: filled.scopeOut,
+    }).eq('id', c.id))
+    report.translated++
+  }
 
   return report
 })

@@ -9,6 +9,7 @@ import { action, badRequest, body, conflict, forbidden, notFound, route, uuidPar
 import { dbAmountToUnits, formatUsdc } from '../server/money.js'
 import { maxPayoutUnits, remainingBudget, SEVERITIES, validateCampaignInput, withdrawError, withdrawableAt, type Severity } from '../server/rules.js'
 import { getSession, requireRole, requireSession, type Session } from '../server/session.js'
+import { withEnglish } from '../server/translate.js'
 
 type Stats = { decided: number; accepted: number; timed_out: number; overturned: number; avg_response_days: number | null }
 
@@ -107,6 +108,8 @@ async function create(session: Session & { wallet: { address: string } }, input:
   const result = validateCampaignInput(input, new Date())
   if (!result.ok) throw badRequest(result.error)
   const v = result.value
+  // Fill English the project left empty with a machine translation (best effort).
+  v.english = await withEnglish(v, v.english)
   const id = crypto.randomUUID()
   must(await db().from('campaigns').insert({
     id, owner_account_id: session.account.id, title: v.title, product_name: v.productName, description: v.description,
@@ -170,6 +173,10 @@ async function update(session: Session, id: string, input: Record<string, unknow
   const result = validateCampaignInput(input, new Date())
   if (!result.ok) throw badRequest(result.error)
   const v = result.value
+  v.english = await withEnglish(v, v.english, {
+    text: { title: campaign.title, description: campaign.description, scopeIn: campaign.scope_in, scopeOut: campaign.scope_out },
+    english: { title: campaign.title_en, description: campaign.description_en, scopeIn: campaign.scope_in_en, scopeOut: campaign.scope_out_en },
+  })
   must(await db().from('campaigns').update({
     title: v.title, product_name: v.productName, description: v.description, scope_in: v.scopeIn, scope_out: v.scopeOut,
     title_en: v.english.title, description_en: v.english.description, scope_in_en: v.english.scopeIn, scope_out_en: v.english.scopeOut,

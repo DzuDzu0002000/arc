@@ -99,7 +99,7 @@ export function NewCampaign() {
 
         <details className="card stack" style={{ gap: 14 }}>
           <summary style={{ cursor: 'pointer', fontWeight: 600 }}>{t('Bản tiếng Anh (không bắt buộc)')}</summary>
-          <p className="small muted" style={{ margin: '8px 0 0' }}>{t('Người xem chọn English sẽ thấy nội dung này. Bỏ trống thì hiện bản gốc.')}</p>
+          <p className="small muted" style={{ margin: '8px 0 0' }}>{t('Người xem chọn English sẽ thấy nội dung này. Bỏ trống thì ArcHunt tự dịch bằng máy; bạn có thể sửa lại bản dịch sau.')}</p>
           <div className="stack" style={{ gap: 14, marginTop: 12 }}>
             <label className="field"><span>{t('Tiêu đề (tiếng Anh)')}</span><input className="input" maxLength={120} value={form.titleEn} onChange={set('titleEn')} placeholder="Test sign-in and multilingual answers" /></label>
             <label className="field"><span>{t('Giới thiệu (tiếng Anh)')}</span><textarea className="input" rows={3} maxLength={5000} value={form.descriptionEn} onChange={set('descriptionEn')} /></label>
