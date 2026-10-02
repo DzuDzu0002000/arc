@@ -188,7 +188,7 @@ const NAV: Record<Role, Array<[string, string, ReactNode]>> = {
 }
 
 /** Vertical sidebar on wide screens, bottom tab bar on phones (switched by CSS). Items depend on the account's role. */
-export function AppNav({ path, role, isAdmin, notices }: { path: string; role: Role; isAdmin: boolean; notices?: ReactNode }) {
+export function AppNav({ path, role, isAdmin }: { path: string; role: Role; isAdmin: boolean }) {
   const items = [...NAV[role]]
   if (isAdmin) items.push(['/app/admin', 'Admin', Icons.admin])
   const current = section(path, role)
@@ -196,7 +196,6 @@ export function AppNav({ path, role, isAdmin, notices }: { path: string; role: R
     <nav className="nav" aria-label={t('Điều hướng chính')}>
       <Link to="/app" className="brand nav-brand"><BrandMark />ArcHunt</Link>
       <span className="nav-role">{role === 'project' ? t('Không gian dự án') : t('Không gian tester')}</span>
-      {notices}
       <div className="nav-inner">
         {items.map(([to, label, glyph]) => (
           <Link key={to} to={to} className={to === '/app/admin' ? 'nav-extra' : undefined} aria-current={current === to ? 'page' : undefined}>

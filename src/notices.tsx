@@ -1,4 +1,4 @@
-// Notification bell (top of the sidebar; top-left corner on phones) plus pop-up toasts in the bottom-left corner.
+// Notification bell in the top-right corner, with pop-up toasts in the bottom-right corner.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, post } from './api'
 import { useSession } from './App'

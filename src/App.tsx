@@ -105,7 +105,8 @@ export function App() {
     <Ctx.Provider value={{ session, refresh }}>
       <div className={showNav ? 'shell' : undefined}>
         {page}
-        {showNav && <AppNav path={path} role={role} isAdmin={session.isAdmin} notices={<Notices />} />}
+        {showNav && <AppNav path={path} role={role} isAdmin={session.isAdmin} />}
+        {showNav && <Notices />}
       </div>
     </Ctx.Provider>
   )
